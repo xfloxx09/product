@@ -19,6 +19,10 @@ def create_app(config_class=Settings):
     from .models import Tenant, TenantUser
     from .services.data_governance import enforce_notes_retention
     from .services.job_orchestration import run_health_check_batch, run_scheduled_sync_batch
+    from .services.schema_compat import ensure_runtime_schema_compatibility
+
+    with app.app_context():
+        ensure_runtime_schema_compatibility()
 
     @login_manager.user_loader
     def load_user(user_id):
