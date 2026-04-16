@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Team Dashboard - CoachingOS{% endblock %}
+{% block page_eyebrow %}Team View{% endblock %}
+{% block page_title %}{{ team.name }} Dashboard{% endblock %}
+{% block page_actions %}
+<a class="btn btn-secondary" href="{{ url_for('workspace.dashboard') }}"><i class="bi bi-arrow-left"></i> Back to workspace dashboard</a>
+{% endblock %}
 {% block content %}
 <section class="hero">
     <h1>{{ team.name }} - Team Dashboard</h1>
-    <p>Workspace: {{ tenant.slug }}</p>
-    <p><a href="{{ url_for('workspace.dashboard') }}">Back to workspace dashboard</a></p>
+    <p>Workspace: <span class="pill"><i class="bi bi-building"></i> {{ tenant.slug }}</span></p>
 </section>
 
 <section class="grid">

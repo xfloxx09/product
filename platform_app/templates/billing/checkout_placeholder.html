@@ -2,7 +2,7 @@
 {% block title %}Checkout - CoachingOS{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Checkout</h1>
+    <h1 class="entity-title"><i class="bi bi-cart-check"></i> Checkout</h1>
     <p>
         Tenant: <strong>{{ tenant or "not selected" }}</strong>
     </p>
@@ -16,7 +16,7 @@
                 </option>
             {% endfor %}
         </select>
-        <button class="btn btn-primary" type="submit">Continue to checkout</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-right-circle"></i> Continue to checkout</button>
     </form>
     <p>
         If Stripe is configured, this will create a live Checkout Session.

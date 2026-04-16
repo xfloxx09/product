@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Plan Catalog Settings - CoachingOS{% endblock %}
+{% block page_eyebrow %}Commercial{% endblock %}
+{% block page_title %}Plan Catalog Management{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Plan Catalog Management</h1>
+    <h1 class="entity-title"><i class="bi bi-gem"></i> Plan Catalog Management</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <p>
         Configure plan names, prices, active-member capacity, and feature unlocks.
@@ -12,7 +14,7 @@
 
     <form method="post" class="form-card">
         {% for plan in plans %}
-            <fieldset style="margin: 12px 0; padding: 12px; border: 1px solid #d9d9d9;">
+            <fieldset>
                 <legend><strong>{{ plan.id|capitalize }}</strong></legend>
 
                 <label>Name</label>

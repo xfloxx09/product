@@ -4,7 +4,7 @@ from flask import abort, g
 from flask_login import current_user
 
 from ..models import Tenant
-from .rbac import user_has_permission
+from .policy import authorize_permission
 
 
 def resolve_tenant_from_request(request):
@@ -45,9 +45,15 @@ def permission_required(permission_name):
     def decorator(view_fn):
         @wraps(view_fn)
         def wrapper(*args, **kwargs):
-            if not current_user.is_authenticated:
-                abort(401)
-            if not user_has_permission(current_user, permission_name):
+            tenant = g.get("current_tenant")
+            decision = authorize_permission(
+                user=current_user,
+                permission_name=permission_name,
+                tenant_id=tenant.id if tenant else None,
+            )
+            if not decision.allowed:
+                if decision.reason == "not_authenticated":
+                    abort(401)
                 abort(403)
             return view_fn(*args, **kwargs)
 

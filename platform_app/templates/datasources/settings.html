@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Data Source Settings - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Data Source Settings{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Data Source Settings</h1>
+        <h1 class="entity-title"><i class="bi bi-gear-wide-connected"></i> Data Source Settings</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <p>Source: <strong>{{ source.name }}</strong> ({{ source.source_type }})</p>
         <p>
@@ -26,9 +28,9 @@
         {% if source.last_connection_error %}
             <p>Last connection error: {{ source.last_connection_error }}</p>
         {% endif %}
-        <form method="post" style="margin-bottom:12px;">
+        <form method="post" class="inline-form">
             <input type="hidden" name="action" value="test_connection">
-            <button class="btn btn-secondary" type="submit">Test Connection</button>
+            <button class="btn btn-secondary" type="submit"><i class="bi bi-plug"></i> Test Connection</button>
         </form>
         <form method="post" class="form-card" style="margin-bottom:12px;">
             <input type="hidden" name="action" value="send_test_alert">
@@ -112,7 +114,9 @@
             <label>Alert cooldown (minutes)</label>
             <input type="number" name="alert_cooldown_minutes" value="{{ alert_policy.get('cooldown_minutes', 180) }}">
 
-            <button class="btn btn-primary" type="submit">Save Config</button>
+            <div class="sticky-actions">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-save2"></i> Save Config</button>
+            </div>
         </form>
     </article>
 
@@ -147,7 +151,9 @@
 
             <label><input type="checkbox" name="clear_alert_webhook_signing_secret" value="1"> Clear existing webhook signing secret</label>
 
-            <button class="btn btn-primary" type="submit">Rotate Secrets</button>
+            <div class="sticky-actions">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-shield-lock"></i> Rotate Secrets</button>
+            </div>
         </form>
     </article>
 

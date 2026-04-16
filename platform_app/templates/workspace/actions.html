@@ -11,21 +11,21 @@
 </section>
 
 <section class="three-up">
-    <article class="card">
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Open actions</span><span class="kpi-icon"><i class="bi bi-list-check"></i></span></div>
         <div class="metric">
-            <span class="metric-label">Open actions</span>
             <span class="metric-value">{{ open_count }}</span>
         </div>
     </article>
-    <article class="card">
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Overdue actions</span><span class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></span></div>
         <div class="metric">
-            <span class="metric-label">Overdue actions</span>
             <span class="metric-value">{{ overdue_count }}</span>
         </div>
     </article>
-    <article class="card">
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Completed actions</span><span class="kpi-icon"><i class="bi bi-check2-circle"></i></span></div>
         <div class="metric">
-            <span class="metric-label">Completed actions</span>
             <span class="metric-value">{{ completed_count }}</span>
         </div>
     </article>
@@ -49,7 +49,15 @@
                         <td>{{ item.title }}</td>
                         <td>{{ item.coaching_session.agent.full_name }}</td>
                         <td>{{ item.owner.full_name if item.owner else "-" }}</td>
-                        <td>{{ item.status }}</td>
+                        <td>
+                            {% set status_class = "is-neutral" %}
+                            {% if item.status == "completed" %}
+                                {% set status_class = "is-success" %}
+                            {% elif item.status == "open" %}
+                                {% set status_class = "is-warning" %}
+                            {% endif %}
+                            <span class="status-badge {{ status_class }}">{{ item.status }}</span>
+                        </td>
                         <td>{{ item.due_at or "-" }}</td>
                         <td><a href="{{ url_for('workspace.session_detail', session_id=item.coaching_session_id, tenant=tenant.slug) }}">Open session</a></td>
                     </tr>
@@ -57,7 +65,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No action items for this filter.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-filter-circle"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-filter-circle"></i> No actions for this filter</h4>
+            <p>Try another status filter or create action items from coaching sessions.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

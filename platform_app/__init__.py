@@ -17,8 +17,8 @@ def create_app(config_class=Settings):
     login_manager.login_view = "auth.login"
 
     from .models import Tenant, TenantUser
-    from .services.connector_alerts import maybe_send_health_alerts_for_tenant
-    from .services.sync_sources import execute_due_sources_for_tenant, execute_health_checks_for_tenant
+    from .services.data_governance import enforce_notes_retention
+    from .services.job_orchestration import run_health_check_batch, run_scheduled_sync_batch
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -79,63 +79,31 @@ def create_app(config_class=Settings):
 
     @app.cli.command("run-scheduled-syncs")
     def run_scheduled_syncs():
-        tenants = Tenant.query.filter_by(is_active=True).all()
-        total_due = 0
-        total_executed = 0
-        total_failed = 0
-        total_throttled = 0
-        for tenant in tenants:
-            system_user = TenantUser.query.filter_by(tenant_id=tenant.id, is_active=True).first()
-            if not system_user:
-                continue
-            result = execute_due_sources_for_tenant(
-                tenant_id=tenant.id,
-                actor_user_id=system_user.id,
-                batch_size=app.config["DATASOURCE_SCHEDULE_BATCH_SIZE"],
-                max_retries=app.config["DATASOURCE_MAX_RETRIES"],
-            )
-            total_due += result["due_count"]
-            total_executed += result["executed"]
-            total_failed += result["failed"]
-            total_throttled += result["throttled"]
-        db.session.commit()
+        totals = run_scheduled_sync_batch(app=app)
         print(
-            f"Scheduled sync run finished: due={total_due}, "
-            f"executed={total_executed}, failed={total_failed}, throttled={total_throttled}"
+            f"Scheduled sync run finished: due={totals['due']}, "
+            f"executed={totals['executed']}, failed={totals['failed']}, throttled={totals['throttled']}"
         )
 
     @app.cli.command("run-connector-health-checks")
     def run_connector_health_checks():
-        tenants = Tenant.query.filter_by(is_active=True).all()
-        total_checked = 0
-        total_unhealthy = 0
-        total_degraded = 0
-        total_alerts_sent = 0
-        for tenant in tenants:
-            result = execute_health_checks_for_tenant(
-                tenant_id=tenant.id,
-                batch_size=app.config["DATASOURCE_HEALTH_CHECK_BATCH_SIZE"],
-                failure_threshold=app.config["DATASOURCE_HEALTH_FAILURE_THRESHOLD"],
-            )
-            alert_result = maybe_send_health_alerts_for_tenant(
-                tenant=tenant,
-                sources=result.get("sources_checked", []),
-                cooldown_minutes=app.config["DATASOURCE_ALERT_COOLDOWN_MINUTES"],
-                email_enabled=app.config["DATASOURCE_ALERT_EMAIL_ENABLED"],
-                webhook_enabled=app.config["DATASOURCE_ALERT_WEBHOOK_ENABLED"],
-                webhook_timeout_seconds=app.config["DATASOURCE_ALERT_WEBHOOK_TIMEOUT_SECONDS"],
-                default_on_degraded=app.config["DATASOURCE_ALERT_DEFAULT_ON_DEGRADED"],
-                default_on_unhealthy=app.config["DATASOURCE_ALERT_DEFAULT_ON_UNHEALTHY"],
-            )
-            total_checked += result["checked"]
-            total_unhealthy += result["unhealthy"]
-            total_degraded += result["degraded"]
-            total_alerts_sent += alert_result["sent"]
-        db.session.commit()
+        totals = run_health_check_batch(app=app)
         print(
             "Connector health checks finished: "
-            f"checked={total_checked}, degraded={total_degraded}, "
-            f"unhealthy={total_unhealthy}, alerts_sent={total_alerts_sent}"
+            f"checked={totals['checked']}, degraded={totals['degraded']}, "
+            f"unhealthy={totals['unhealthy']}, alerts_sent={totals['alerts_sent']}"
         )
+
+    @app.cli.command("run-data-retention")
+    def run_data_retention():
+        tenants = Tenant.query.filter_by(is_active=True).all()
+        total_cleared = 0
+        for tenant in tenants:
+            total_cleared += enforce_notes_retention(
+                tenant_id=tenant.id,
+                retention_days=app.config["DATA_RETENTION_DAYS"],
+            )
+        db.session.commit()
+        print(f"Data retention run finished: cleared_notes={total_cleared}")
 
     return app

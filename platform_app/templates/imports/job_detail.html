@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Import Job {{ job.id }} - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Import Job #{{ job.id }}{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Import job #{{ job.id }}</h1>
+    <h1 class="entity-title"><i class="bi bi-file-earmark-arrow-up"></i> Import job #{{ job.id }}</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <table class="table-like">
         <tbody>

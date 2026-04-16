@@ -13,17 +13,21 @@
 </section>
 
 <section class="grid">
-    <article class="card">
-        <div class="metric"><span class="metric-label">Critical</span><span class="metric-value">{{ summary.critical_drop }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Critical</span><span class="kpi-icon"><i class="bi bi-exclamation-octagon"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.critical_drop }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">Declining</span><span class="metric-value">{{ summary.declining }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Declining</span><span class="kpi-icon"><i class="bi bi-graph-down-arrow"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.declining }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">Watch</span><span class="metric-value">{{ summary.watch }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Watch</span><span class="kpi-icon"><i class="bi bi-eye"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.watch }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">Improving</span><span class="metric-value">{{ summary.improving }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Improving</span><span class="kpi-icon"><i class="bi bi-graph-up"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.improving }}</span></div>
     </article>
 </section>
 
@@ -47,13 +51,27 @@
                         <td>{{ row.recent_avg if row.recent_avg is not none else "-" }}</td>
                         <td>{{ row.baseline_avg if row.baseline_avg is not none else "-" }}</td>
                         <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
-                        <td>{{ row.risk_status }}</td>
+                        <td>
+                            {% set status_class = "is-neutral" %}
+                            {% if row.risk_status == "critical_drop" %}
+                                {% set status_class = "is-danger" %}
+                            {% elif row.risk_status in ["declining", "watch"] %}
+                                {% set status_class = "is-warning" %}
+                            {% elif row.risk_status == "improving" %}
+                                {% set status_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ status_class }}">{{ row.risk_status }}</span>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No members found for this filter.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-funnel"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-funnel"></i> No members for this filter</h4>
+            <p>Widen filter scope to inspect more trend candidates.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -81,7 +99,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No team trend data yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-diagram-3"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-diagram-3"></i> No team trend data yet</h4>
+            <p>Capture more scored sessions to generate ranking insights.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

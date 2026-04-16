@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Role Management - CoachingOS{% endblock %}
+{% block page_eyebrow %}Governance{% endblock %}
+{% block page_title %}Role Management{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Role Management</h1>
+        <h1 class="entity-title"><i class="bi bi-shield-lock"></i> Role Management</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <p><a href="{{ url_for('settings.workspace_settings') }}">Back to Workspace Settings</a></p>
         <form method="post" class="form-card">
@@ -16,7 +18,7 @@
             <input type="text" name="display_name" placeholder="QA Lead" required>
 
             <label>Permissions</label>
-            <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px;">
+            <div class="checkbox-grid">
                 {% for permission in all_permissions %}
                     <label><input type="checkbox" name="permissions" value="{{ permission }}"> {{ permission }}</label>
                 {% endfor %}

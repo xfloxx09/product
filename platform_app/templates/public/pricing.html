@@ -2,7 +2,7 @@
 {% block title %}Pricing - CoachingOS{% endblock %}
 {% block content %}
 <section>
-    <h1>Pricing</h1>
+    <h1 class="entity-title"><i class="bi bi-gem"></i> Pricing</h1>
     <p>Built to scale from 20 seats to global enterprise deployments.</p>
     <div class="grid">
         {% for plan in plans %}
@@ -18,7 +18,7 @@
                         CSV only
                     {% endif %}
                 </p>
-                <a class="btn btn-primary" href="{{ url_for('onboarding.start') }}">Start {{ plan.name }}</a>
+                <a class="btn btn-primary" href="{{ url_for('onboarding.start') }}"><i class="bi bi-rocket-takeoff"></i> Start {{ plan.name }}</a>
             </article>
         {% endfor %}
     </div>

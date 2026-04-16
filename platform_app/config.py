@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 
 class Settings:
@@ -25,6 +26,9 @@ class Settings:
     )
     SESSION_COOKIE_SECURE = _is_prod
     REMEMBER_COOKIE_SECURE = _is_prod
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_TTL_HOURS", "12")))
+    SESSION_REFRESH_EACH_REQUEST = True
+    WTF_CSRF_TIME_LIMIT = int(os.environ.get("CSRF_TTL_SECONDS", "3600"))
 
     INVITE_TTL_HOURS = int(os.environ.get("INVITE_TTL_HOURS", "72"))
     APP_BASE_URL = os.environ.get("APP_BASE_URL", "").rstrip("/")
@@ -51,3 +55,4 @@ class Settings:
     DATASOURCE_ALERT_WEBHOOK_TIMEOUT_SECONDS = int(os.environ.get("DATASOURCE_ALERT_WEBHOOK_TIMEOUT_SECONDS", "10"))
     DATASOURCE_ALERT_DEFAULT_ON_DEGRADED = os.environ.get("DATASOURCE_ALERT_DEFAULT_ON_DEGRADED", "0").strip() not in {"0", "false", "False"}
     DATASOURCE_ALERT_DEFAULT_ON_UNHEALTHY = os.environ.get("DATASOURCE_ALERT_DEFAULT_ON_UNHEALTHY", "1").strip() not in {"0", "false", "False"}
+    DATA_RETENTION_DAYS = int(os.environ.get("DATA_RETENTION_DAYS", "365"))

@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Sync Job {{ job.id }} - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Sync Job #{{ job.id }}{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Sync job #{{ job.id }}</h1>
+    <h1 class="entity-title"><i class="bi bi-database-check"></i> Sync job #{{ job.id }}</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <table class="table-like">
         <tbody>

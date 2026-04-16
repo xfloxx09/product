@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Workspace Settings - CoachingOS{% endblock %}
+{% block page_eyebrow %}Governance{% endblock %}
+{% block page_title %}Workspace Settings{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Workspace settings</h1>
+    <h1 class="entity-title"><i class="bi bi-sliders"></i> Workspace settings</h1>
     <p>Tenant: <strong>{{ tenant.slug }}</strong></p>
     <p><a href="{{ url_for('settings.plan_catalog_settings') }}">Open Plan Catalog Management</a></p>
     <p><a href="{{ url_for('settings.role_settings') }}">Open Role Management</a></p>

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}New Import Job - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}New CSV Import Job{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>New CSV import job</h1>
+        <h1 class="entity-title"><i class="bi bi-upload"></i> New CSV import job</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <form method="post" enctype="multipart/form-data" class="form-card">
             <label>CSV file</label>
@@ -28,7 +30,9 @@
             <label><input type="checkbox" name="decimal_comma" value="1"> Parse decimal comma (e.g. 87,5)</label>
             <label><input type="checkbox" name="strip_percent" value="1" checked> Strip percent sign from score</label>
 
-            <button class="btn btn-primary" type="submit">Run import</button>
+            <div class="sticky-actions">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-play-circle"></i> Run import</button>
+            </div>
         </form>
     </article>
     <article class="card">

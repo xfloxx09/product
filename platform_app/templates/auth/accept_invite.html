@@ -2,7 +2,7 @@
 {% block title %}Accept Invitation - CoachingOS{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Accept invitation</h1>
+    <h1 class="entity-title"><i class="bi bi-person-plus"></i> Accept invitation</h1>
     <p>Workspace ID: <strong>{{ invite.tenant_id }}</strong></p>
     <p>Name: {{ invite.full_name }}</p>
     <p>Email: {{ invite.email }}</p>
@@ -11,7 +11,7 @@
     <form method="post" class="form-card">
         <label>Set password</label>
         <input type="password" name="password" minlength="10" required>
-        <button class="btn btn-primary" type="submit">Create account</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle"></i> Create account</button>
     </form>
 </section>
 {% endblock %}

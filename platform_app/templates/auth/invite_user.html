@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Invite User - CoachingOS{% endblock %}
+{% block page_eyebrow %}Governance{% endblock %}
+{% block page_title %}Invite User{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Invite user</h1>
+        <h1 class="entity-title"><i class="bi bi-envelope-plus"></i> Invite user</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <form method="post" class="form-card">
             <label>Full name</label>
@@ -19,7 +21,7 @@
                 {% endfor %}
             </select>
 
-            <button class="btn btn-primary" type="submit">Create invite link</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-link-45deg"></i> Create invite link</button>
         </form>
     </article>
 
@@ -38,10 +40,10 @@
                             <td>{{ invite.expires_at.strftime("%Y-%m-%d %H:%M") }}</td>
                             <td class="truncate">{{ invite_links.get(invite.id) }}</td>
                             <td>
-                                <form method="post" action="{{ url_for('auth.resend_invite', invite_id=invite.id) }}" style="display:inline">
+                                <form method="post" action="{{ url_for('auth.resend_invite', invite_id=invite.id) }}" class="inline-form">
                                     <button class="btn btn-secondary" type="submit">Resend</button>
                                 </form>
-                                <form method="post" action="{{ url_for('auth.revoke_invite', invite_id=invite.id) }}" style="display:inline">
+                                <form method="post" action="{{ url_for('auth.revoke_invite', invite_id=invite.id) }}" class="inline-form">
                                     <button class="btn btn-secondary" type="submit">Revoke</button>
                                 </form>
                             </td>

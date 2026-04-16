@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Data Sources - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Data Sources{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Data Sources</h1>
+        <h1 class="entity-title"><i class="bi bi-plug"></i> Data Sources</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <p><a href="{{ url_for('datasources.alert_analytics', tenant=tenant.slug) }}">Open Alert Analytics</a></p>
-        <form method="post" action="{{ url_for('datasources.run_due_sources', tenant=tenant.slug) }}" style="margin-bottom: 12px;">
-            <button class="btn btn-secondary" type="submit">Check and Run Due Sources</button>
+        <form method="post" action="{{ url_for('datasources.run_due_sources', tenant=tenant.slug) }}" class="inline-form">
+            <button class="btn btn-secondary" type="submit"><i class="bi bi-play-circle"></i> Check and Run Due Sources</button>
         </form>
-        <form method="post" action="{{ url_for('datasources.check_health', tenant=tenant.slug) }}" style="margin-bottom: 12px;">
-            <button class="btn btn-secondary" type="submit">Run Health Checks</button>
+        <form method="post" action="{{ url_for('datasources.check_health', tenant=tenant.slug) }}" class="inline-form">
+            <button class="btn btn-secondary" type="submit"><i class="bi bi-heart-pulse"></i> Run Health Checks</button>
         </form>
         <form method="post" class="form-card">
             <label>Name</label>
@@ -95,7 +97,9 @@
             <label>Alert cooldown (minutes)</label>
             <input type="number" name="alert_cooldown_minutes" value="180">
 
-            <button class="btn btn-primary" type="submit">Create Data Source</button>
+            <div class="sticky-actions">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-plus-circle"></i> Create Data Source</button>
+            </div>
         </form>
     </article>
 
@@ -129,7 +133,15 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {{ source.health_status }}
+                                {% set source_health_class = "is-neutral" %}
+                                {% if source.health_status == "unhealthy" %}
+                                    {% set source_health_class = "is-danger" %}
+                                {% elif source.health_status == "degraded" %}
+                                    {% set source_health_class = "is-warning" %}
+                                {% elif source.health_status == "healthy" %}
+                                    {% set source_health_class = "is-success" %}
+                                {% endif %}
+                                <span class="status-badge {{ source_health_class }}">{{ source.health_status }}</span>
                                 {% if source.connection_failure_count %}
                                     ({{ source.connection_failure_count }})
                                 {% endif %}
@@ -182,7 +194,17 @@
                     <tr>
                         <td>{{ job.id }}</td>
                         <td>{{ job.data_source.name }}</td>
-                        <td>{{ job.status }}</td>
+                        <td>
+                            {% set job_status_class = "is-neutral" %}
+                            {% if job.status in ["failed", "error"] %}
+                                {% set job_status_class = "is-danger" %}
+                            {% elif job.status in ["running", "queued"] %}
+                                {% set job_status_class = "is-warning" %}
+                            {% elif job.status in ["completed", "success"] %}
+                                {% set job_status_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ job_status_class }}">{{ job.status }}</span>
+                        </td>
                         <td>{{ job.success_rows }}/{{ job.total_rows }}</td>
                         <td><a href="{{ url_for('datasources.job_detail', job_id=job.id, tenant=tenant.slug) }}">Details</a></td>
                     </tr>

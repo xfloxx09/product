@@ -4,17 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Coaching Platform{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
     {% block head_extra %}{% endblock %}
 </head>
-<body>
+<body {% if current_user.is_authenticated and current_user.tenant %}data-tenant-slug="{{ current_user.tenant.slug }}"{% endif %}>
     {% if current_user.is_authenticated %}
     <div class="app-shell">
-        <aside class="app-sidebar">
+        <aside class="app-sidebar" id="tour-sidebar">
             <div>
-                <a href="{{ url_for('workspace.dashboard') }}" class="brand brand-sidebar">CoachingOS</a>
+                <a href="{{ url_for('workspace.dashboard') }}" class="brand brand-sidebar">
+                    <img src="" alt="Tenant logo" class="tenant-logo" data-tenant-logo hidden>
+                    <i class="bi bi-stars"></i>
+                    <span>CoachingOS</span>
+                </a>
                 <p class="sidebar-kicker">Enterprise Coaching OS</p>
-                <div class="workspace-chip">
+                <div class="workspace-chip tenant-lockup">
                     <strong>{{ current_user.tenant.name or current_user.tenant.slug }}</strong>
                     <span>{{ current_user.role|replace('_', ' ')|title }}</span>
                 </div>
@@ -22,68 +30,80 @@
             <nav class="sidebar-nav">
                 <div class="nav-group">
                     <div class="nav-group-label">Overview</div>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.dashboard' else '' }}" href="{{ url_for('workspace.dashboard') }}">Executive overview</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.dashboard' else '' }}" href="{{ url_for('workspace.dashboard') }}"><i class="bi bi-grid-1x2"></i><span>Executive overview</span></a>
                 </div>
                 <div class="nav-group">
                     <div class="nav-group-label">Coaching Ops</div>
                     {% if has_permission('workspace.view') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_ops_hub' else '' }}" href="{{ url_for('workspace.coaching_ops_hub', tenant=current_user.tenant.slug) }}">Ops hub</a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.quality_insights_dashboard' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=current_user.tenant.slug) }}">Quality insights</a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_sla_dashboard' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=current_user.tenant.slug) }}">SLA board</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_ops_hub' else '' }}" href="{{ url_for('workspace.coaching_ops_hub', tenant=current_user.tenant.slug) }}"><i class="bi bi-diagram-3"></i><span>Ops hub</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.quality_insights_dashboard' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-graph-up-arrow"></i><span>Quality insights</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_sla_dashboard' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-alarm"></i><span>SLA board</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_sessions') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}">Completed sessions</a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}">Follow-up actions</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}"><i class="bi bi-journal-check"></i><span>Completed sessions</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-list-check"></i><span>Follow-up actions</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
                     <div class="nav-group-label">People</div>
                     {% if has_permission('workspace.manage_agents') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_agents' else '' }}" href="{{ url_for('workspace.manage_agents') }}">Members</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_agents' else '' }}" href="{{ url_for('workspace.manage_agents') }}"><i class="bi bi-person-badge"></i><span>Members</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_teams') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_teams' else '' }}" href="{{ url_for('workspace.manage_teams') }}">Teams</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_teams' else '' }}" href="{{ url_for('workspace.manage_teams') }}"><i class="bi bi-people"></i><span>Teams</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
                     <div class="nav-group-label">Governance</div>
                     {% if has_permission('workspace.manage_users') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_users' else '' }}" href="{{ url_for('workspace.manage_users') }}">Users and access</a>
-                    <a class="{{ 'is-active' if request.endpoint == 'auth.invite_user' else '' }}" href="{{ url_for('auth.invite_user') }}">Invitations</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_users' else '' }}" href="{{ url_for('workspace.manage_users') }}"><i class="bi bi-shield-lock"></i><span>Users and access</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'auth.invite_user' else '' }}" href="{{ url_for('auth.invite_user') }}"><i class="bi bi-envelope-plus"></i><span>Invitations</span></a>
                     {% endif %}
                     {% if has_permission('settings.manage') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('settings.') else '' }}" href="{{ url_for('settings.workspace_settings') }}">Settings</a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('settings.') else '' }}" href="{{ url_for('settings.workspace_settings') }}"><i class="bi bi-sliders"></i><span>Settings</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
                     <div class="nav-group-label">Integrations</div>
                     {% if has_permission('workspace.manage_imports') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'imports.mapper' else '' }}" href="{{ url_for('imports.mapper', tenant=current_user.tenant.slug) }}">CSV mapper</a>
-                    <a class="{{ 'is-active' if request.endpoint == 'imports.new_job' else '' }}" href="{{ url_for('imports.new_job', tenant=current_user.tenant.slug) }}">Imports</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.mapper' else '' }}" href="{{ url_for('imports.mapper', tenant=current_user.tenant.slug) }}"><i class="bi bi-columns-gap"></i><span>CSV mapper</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.new_job' else '' }}" href="{{ url_for('imports.new_job', tenant=current_user.tenant.slug) }}"><i class="bi bi-upload"></i><span>Imports</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_integrations') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('datasources.') else '' }}" href="{{ url_for('datasources.list_sources', tenant=current_user.tenant.slug) }}">Data sources</a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('datasources.') else '' }}" href="{{ url_for('datasources.list_sources', tenant=current_user.tenant.slug) }}"><i class="bi bi-plug"></i><span>Data sources</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
                     <div class="nav-group-label">Billing</div>
                     {% if has_permission('billing.manage') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('billing.') else '' }}" href="{{ url_for('billing.billing_portal') }}">Plan and billing</a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('billing.') else '' }}" href="{{ url_for('billing.billing_portal') }}"><i class="bi bi-credit-card-2-front"></i><span>Plan and billing</span></a>
                     {% endif %}
                 </div>
             </nav>
             <form method="post" action="{{ url_for('auth.logout') }}">
-                <button class="btn btn-secondary btn-block" type="submit">Logout</button>
+                <button class="btn btn-secondary btn-block" type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
             </form>
         </aside>
 
         <main class="app-main">
-            <header class="topbar">
+            <header class="topbar" id="tour-topbar">
                 <div>
                     <div class="eyebrow">{% block page_eyebrow %}Workspace{% endblock %}</div>
                     <h1 class="page-title">{% block page_title %}{{ self.title()|striptags }}{% endblock %}</h1>
                 </div>
                 <div class="topbar-meta">
+                    <button class="theme-toggle" type="button" data-presentation-toggle>
+                        <i class="bi bi-easel2"></i>
+                    </button>
+                    <button class="theme-toggle" type="button" data-logo-open>
+                        <i class="bi bi-image"></i>
+                    </button>
+                    <button class="theme-toggle" type="button" data-tour-start>
+                        <i class="bi bi-mortarboard"></i>
+                    </button>
+                    <button class="theme-toggle" type="button" data-theme-toggle>
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </button>
                     <span class="scope-pill">
                         {% if current_user.tenant %}
                             Scope: {{ current_user.tenant.slug }}
@@ -95,12 +115,17 @@
                 </div>
             </header>
 
-            <section class="page-body">
+            <section class="page-body" id="tour-content">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-                        <section class="alerts">
+                        <section class="alerts toast-stack">
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                                <div class="alert alert-{{ category }}">
+                                    <strong>
+                                        {% if category == 'success' %}<i class="bi bi-check2-circle"></i> Success{% elif category == 'warning' %}<i class="bi bi-exclamation-circle"></i> Warning{% else %}<i class="bi bi-x-circle"></i> Attention{% endif %}
+                                    </strong>
+                                    <div>{{ message }}</div>
+                                </div>
                             {% endfor %}
                         </section>
                     {% endif %}
@@ -125,9 +150,14 @@
     <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <section class="alerts">
+                <section class="alerts toast-stack">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                        <div class="alert alert-{{ category }}">
+                            <strong>
+                                {% if category == 'success' %}<i class="bi bi-check2-circle"></i> Success{% elif category == 'warning' %}<i class="bi bi-exclamation-circle"></i> Warning{% else %}<i class="bi bi-x-circle"></i> Attention{% endif %}
+                            </strong>
+                            <div>{{ message }}</div>
+                        </div>
                     {% endfor %}
                 </section>
             {% endif %}
@@ -135,5 +165,35 @@
         {{ self.content() }}
     </main>
     {% endif %}
+    {% if current_user.is_authenticated %}
+    <div class="logo-modal-backdrop" data-logo-backdrop hidden></div>
+    <div class="logo-modal" data-logo-modal hidden>
+        <div class="tour-step">Tenant Branding</div>
+        <h3>Custom Brand Logo</h3>
+        <p>Add a logo URL for this workspace to personalize the app shell for enterprise demos.</p>
+        <form class="stack" data-logo-form>
+            <label>Logo image URL
+                <input type="url" name="logo_url" placeholder="https://cdn.example.com/logo.svg">
+            </label>
+            <div class="tour-actions">
+                <button class="btn btn-secondary" type="button" data-logo-clear>Clear</button>
+                <button class="btn btn-secondary" type="button" data-logo-cancel>Cancel</button>
+                <button class="btn btn-primary" type="submit">Save Logo</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="tour-backdrop" data-tour-backdrop hidden></div>
+    <div class="tour-card" data-tour-card hidden>
+        <div class="tour-step">Product Tour</div>
+        <h3 data-tour-title>Welcome to CoachingOS</h3>
+        <p data-tour-body>Get a quick guided walkthrough of your enterprise command center.</p>
+        <div class="tour-actions">
+            <button class="btn btn-secondary" type="button" data-tour-skip>Skip</button>
+            <button class="btn btn-primary" type="button" data-tour-next>Next</button>
+        </div>
+    </div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='site.js') }}"></script>
 </body>
 </html>

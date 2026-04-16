@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Workspace Dashboard - CoachingOS{% endblock %}
+{% block page_eyebrow %}Executive View{% endblock %}
+{% block page_title %}Coaching Performance Command Center{% endblock %}
+{% block page_actions %}
+<div class="inline-actions">
+    <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}"><i class="bi bi-diagram-3"></i> Open Ops Hub</a>
+    <a class="btn btn-primary" href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}"><i class="bi bi-journal-plus"></i> Add Session</a>
+    <button class="btn btn-secondary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print Board</button>
+</div>
+{% endblock %}
 {% block content %}
 <section class="hero">
     <h1>{{ tenant.name }} - Coaching Operations</h1>
-    <p>Industry: {{ tenant.industry }} | Plan: {{ plan_definition.name }}</p>
+    <p><span class="pill"><i class="bi bi-building"></i> {{ tenant.industry|title }}</span> <span class="pill"><i class="bi bi-gem"></i> {{ plan_definition.name }}</span></p>
     {% if scoped_team_ids is not none %}
         <p>View scope: delegated teams only</p>
     {% else %}
@@ -12,40 +21,60 @@
 </section>
 
 <section class="grid">
-    <article class="card">
-        <h3>Teams</h3>
-        <p>{{ team_count }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Teams</h3><span class="kpi-icon"><i class="bi bi-people"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ team_count }}">{{ team_count }}</p>
+        <p class="kpi-meta">Active organizational units</p>
     </article>
-    <article class="card">
-        <h3>Agents</h3>
-        <p>{{ total_agents }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Agents</h3><span class="kpi-icon"><i class="bi bi-person-badge"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ total_agents }}">{{ total_agents }}</p>
+        <p class="kpi-meta">Coached workforce footprint</p>
     </article>
-    <article class="card">
-        <h3>Sessions</h3>
-        <p>{{ total_sessions }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Sessions</h3><span class="kpi-icon"><i class="bi bi-journal-check"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ total_sessions }}">{{ total_sessions }}</p>
+        <p class="kpi-meta">Logged coaching interactions</p>
     </article>
-    <article class="card">
-        <h3>Avg Score</h3>
-        <p>{{ avg_score if avg_score is not none else "-" }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Average Score</h3><span class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></span></div>
+        <p class="kpi-value kpi-count" {% if avg_score is not none %}data-count-to="{{ avg_score }}" data-count-decimals="1"{% endif %}>{{ avg_score if avg_score is not none else "-" }}</p>
+        {% if avg_score is not none %}
+        <div class="kpi-ring" style="--pct: {{ avg_score|round(0) }}; --ring-color: #5ea1ff;">
+            <span class="kpi-ring-value">{{ avg_score|round(0) }}%</span>
+        </div>
+        {% endif %}
+        <p class="kpi-meta">Quality baseline across sessions</p>
     </article>
-    <article class="card">
-        <h3>Connector Health</h3>
-        <p>Unhealthy: {{ unhealthy_sources }} | Degraded: {{ degraded_sources }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Connector Health</h3><span class="kpi-icon"><i class="bi bi-plug"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ unhealthy_sources + degraded_sources }}">{{ unhealthy_sources + degraded_sources }}</p>
+        <p class="kpi-meta">Unhealthy: {{ unhealthy_sources }} | Degraded: {{ degraded_sources }}</p>
     </article>
-    <article class="card">
-        <h3>Coaching SLA</h3>
-        <p>Overdue: {{ overdue_coaching_count }} | Never coached: {{ never_coached_count }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Coaching SLA</h3><span class="kpi-icon"><i class="bi bi-alarm"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ overdue_coaching_count }}">{{ overdue_coaching_count }}</p>
+        <p class="kpi-meta">Overdue | Never coached: {{ never_coached_count }}</p>
         <p><a href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug) }}">Open SLA board</a></p>
     </article>
-    <article class="card">
-        <h3>Quality Risks</h3>
-        <p>Critical: {{ critical_quality_count }} | Declining: {{ declining_quality_count }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Quality Risks</h3><span class="kpi-icon"><i class="bi bi-activity"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ critical_quality_count + declining_quality_count }}">{{ critical_quality_count + declining_quality_count }}</p>
+        <p class="kpi-meta">Critical: {{ critical_quality_count }} | Declining: {{ declining_quality_count }}</p>
         <p><a href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug) }}">Open quality insights</a></p>
     </article>
-    <article class="card">
-        <h3>Plan Capacity</h3>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Plan Capacity</h3><span class="kpi-icon"><i class="bi bi-gem"></i></span></div>
+        {% set cap_pct = 100 %}
+        {% if active_members_limit.limit is not none and active_members_limit.limit > 0 %}
+            {% set cap_pct = ((usage.active_members / active_members_limit.limit) * 100)|round(0) %}
+            {% if cap_pct > 100 %}{% set cap_pct = 100 %}{% endif %}
+        {% endif %}
+        <p class="kpi-value kpi-count" data-count-to="{{ usage.active_members }}">{{ usage.active_members }}</p>
+        <div class="kpi-ring" style="--pct: {{ cap_pct }}; --ring-color: #7b61ff;">
+            <span class="kpi-ring-value">{{ cap_pct }}%</span>
+        </div>
         <p>
-            Active members: {{ usage.active_members }}
             {% if active_members_limit.limit is not none %}/{{ active_members_limit.limit }}{% else %}/Unlimited{% endif %}
         </p>
         <p><a href="{{ url_for('billing.billing_portal') }}">Manage plan</a></p>
@@ -72,7 +101,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No team performance data yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-bar-chart"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-bar-chart"></i> Team performance not available yet</h4>
+            <p>Create teams, add members, and log sessions to unlock ranked performance views.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -96,7 +129,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No sessions yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-journal-x"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-journal-x"></i> No sessions yet</h4>
+            <p>Use the coaching ops flow to log first sessions and start trend visibility.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

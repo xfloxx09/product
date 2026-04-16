@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block title %}CSV Mapper - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}CSV Import Mapper{% endblock %}
 {% block content %}
 <section>
-    <h1>CSV import mapper</h1>
+    <h1 class="entity-title"><i class="bi bi-columns-gap"></i> CSV import mapper</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <p>Define how customer columns map to product fields.</p>
-    <p><a class="btn btn-primary" href="{{ url_for('imports.new_job', tenant=tenant.slug) }}">Run Import Job</a></p>
+    <p><a class="btn btn-primary" href="{{ url_for('imports.new_job', tenant=tenant.slug) }}"><i class="bi bi-play-circle"></i> Run Import Job</a></p>
     <div class="card">
         <table class="table-like">
             <thead>

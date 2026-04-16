@@ -12,17 +12,21 @@
 </section>
 
 <section class="grid">
-    <article class="card">
-        <div class="metric"><span class="metric-label">Overdue</span><span class="metric-value">{{ summary.overdue }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Overdue</span><span class="kpi-icon"><i class="bi bi-alarm"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.overdue }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">Never coached</span><span class="metric-value">{{ summary.never_coached }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Never coached</span><span class="kpi-icon"><i class="bi bi-hourglass"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.never_coached }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">On track</span><span class="metric-value">{{ summary.on_track }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">On track</span><span class="kpi-icon"><i class="bi bi-check2"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.on_track }}</span></div>
     </article>
-    <article class="card">
-        <div class="metric"><span class="metric-label">Inactive</span><span class="metric-value">{{ summary.inactive }}</span></div>
+    <article class="card kpi-card">
+        <div class="kpi-head"><span class="metric-label">Inactive</span><span class="kpi-icon"><i class="bi bi-pause-circle"></i></span></div>
+        <div class="metric"><span class="metric-value">{{ summary.inactive }}</span></div>
     </article>
 </section>
 
@@ -47,7 +51,15 @@
                         <td>{{ row.last_session_at or "-" }}</td>
                         <td>{{ row.due_at or "-" }}</td>
                         <td>
-                            {{ row.status }}
+                            {% set status_class = "is-neutral" %}
+                            {% if row.status == "overdue" %}
+                                {% set status_class = "is-danger" %}
+                            {% elif row.status == "never_coached" %}
+                                {% set status_class = "is-warning" %}
+                            {% elif row.status == "on_track" %}
+                                {% set status_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ status_class }}">{{ row.status }}</span>
                             {% if row.overdue_days %}
                                 ({{ row.overdue_days }}d)
                             {% endif %}
@@ -57,7 +69,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No members found for this filter.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-people"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-people"></i> No members for this filter</h4>
+            <p>Adjust filter scope or add members and cadence policies to populate this view.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

@@ -4,6 +4,11 @@ from flask import Blueprint, flash, g, redirect, render_template, request, url_f
 from flask_login import current_user, login_required
 from sqlalchemy import case, func
 
+from ...application.coaching_ops import (
+    create_planned_case_from_form,
+    create_session_from_form,
+    session_action_completion_map,
+)
 from ...extensions import db
 from ...models import (
     AgentCoachingCadence,
@@ -17,7 +22,7 @@ from ...models import (
     UserInvitation,
 )
 from ...services.audit import log_audit_event
-from ...services.coaching_workflow import build_case_summary, create_planned_case, ensure_case_for_session
+from ...services.coaching_workflow import build_case_summary
 from ...services.coaching_sla import build_agent_sla_rows, cadence_map_for_agents
 from ...services.mailer import send_action_item_reminder_email
 from ...services.plan_catalog import build_usage_snapshot, evaluate_limit, get_plan_definition
@@ -42,44 +47,30 @@ def coaching_ops_hub():
         if not role_key_exists_for_tenant(tenant.id, current_user.role) and current_user.role != "owner":
             flash("Your role is no longer valid for workflow changes.", "danger")
             return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
-        agent_id = request.form.get("agent_id")
-        title = (request.form.get("title") or "").strip()
-        summary = (request.form.get("summary") or "").strip() or None
-        source_type = (request.form.get("source_type") or "manager_assigned").strip().lower()
-        priority = (request.form.get("priority") or "normal").strip().lower()
-        due_raw = (request.form.get("due_at") or "").strip()
-
-        agent_q = AgentProfile.query.filter_by(id=agent_id, tenant_id=tenant.id)
-        if scoped_team_ids is not None:
-            agent_q = agent_q.filter(AgentProfile.team_id.in_(scoped_team_ids))
-        agent = agent_q.first()
-        if not agent:
-            flash("Invalid agent for coaching case.", "danger")
-            return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
-
-        due_at = None
-        if due_raw:
-            try:
-                due_at = datetime.strptime(due_raw, "%Y-%m-%d")
-            except ValueError:
+        try:
+            case = create_planned_case_from_form(
+                tenant_id=tenant.id,
+                actor_user_id=current_user.id,
+                form_data=request.form,
+                scoped_team_ids=scoped_team_ids,
+            )
+        except ValueError as exc:
+            if str(exc) == "invalid_agent":
+                flash("Invalid agent for coaching case.", "danger")
+            elif str(exc) == "team_scope_violation":
+                flash("You can only create coaching cases for your assigned teams.", "danger")
+            else:
                 flash("Target date must use YYYY-MM-DD format.", "danger")
-                return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
-
-        case = create_planned_case(
-            tenant_id=tenant.id,
-            agent=agent,
-            requested_by_user_id=current_user.id,
-            assigned_to_user_id=current_user.id,
-            title=title or None,
-            summary=summary,
-            source_type=source_type,
-            priority=priority,
-            due_at=due_at,
-        )
+            return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
         log_audit_event(
             tenant.id,
             "workspace.coaching_case_created",
-            {"case_id": case.id, "agent_id": agent.id, "source_type": source_type, "priority": priority},
+            {
+                "case_id": case.id,
+                "agent_id": case.agent_id,
+                "source_type": case.source_type,
+                "priority": case.priority,
+            },
             actor_user_id=current_user.id,
         )
         db.session.commit()
@@ -398,61 +389,23 @@ def manage_sessions():
         return redirect(url_for("workspace.dashboard"))
 
     if request.method == "POST":
-        agent_id = request.form.get("agent_id")
-        coaching_type = (request.form.get("coaching_type") or "quality").strip()
-        channel = (request.form.get("channel") or "call").strip()
-        score_raw = (request.form.get("score") or "").strip()
-        notes = (request.form.get("notes") or "").strip() or None
-        action_items_raw = (request.form.get("action_items") or "").strip()
-        action_due_raw = (request.form.get("action_due_at") or "").strip()
-
-        agent_q = AgentProfile.query.filter_by(id=agent_id, tenant_id=tenant.id)
-        if scoped_team_ids is not None:
-            agent_q = agent_q.filter(AgentProfile.team_id.in_(scoped_team_ids))
-        agent = agent_q.first()
-        if not agent:
-            flash("Invalid agent.", "danger")
-            return redirect(url_for("workspace.manage_sessions", tenant=tenant.slug))
-
-        score = None
-        if score_raw:
-            try:
-                score = float(score_raw)
-            except ValueError:
-                flash("Score must be a number.", "danger")
-                return redirect(url_for("workspace.manage_sessions", tenant=tenant.slug))
-
-        action_due_at = None
-        if action_due_raw:
-            try:
-                action_due_at = datetime.strptime(action_due_raw, "%Y-%m-%d")
-            except ValueError:
-                flash("Action due date must use YYYY-MM-DD format.", "danger")
-                return redirect(url_for("workspace.manage_sessions", tenant=tenant.slug))
-
-        session = CoachingSession(
-            tenant_id=tenant.id,
-            agent_id=agent.id,
-            coach_user_id=current_user.id,
-            coaching_type=coaching_type,
-            channel=channel,
-            score=score,
-            notes=notes,
-        )
-        db.session.add(session)
-        db.session.flush()
-        coaching_case = ensure_case_for_session(session)
-        action_titles = [line.strip() for line in action_items_raw.splitlines() if line.strip()]
-        for title in action_titles[:10]:
-            db.session.add(
-                CoachingActionItem(
-                    tenant_id=tenant.id,
-                    coaching_session_id=session.id,
-                    owner_user_id=current_user.id,
-                    title=title[:255],
-                    due_at=action_due_at,
-                )
+        try:
+            session, coaching_case, action_count = create_session_from_form(
+                tenant_id=tenant.id,
+                actor_user_id=current_user.id,
+                form_data=request.form,
+                scoped_team_ids=scoped_team_ids,
             )
+        except ValueError as exc:
+            if str(exc) == "invalid_agent":
+                flash("Invalid agent.", "danger")
+            elif str(exc) == "team_scope_violation":
+                flash("You can only create sessions for your assigned teams.", "danger")
+            elif str(exc) == "invalid_score":
+                flash("Score must be a number.", "danger")
+            else:
+                flash("Action due date must use YYYY-MM-DD format.", "danger")
+            return redirect(url_for("workspace.manage_sessions", tenant=tenant.slug))
         log_audit_event(
             tenant.id,
             "workspace.session_created",
@@ -460,10 +413,10 @@ def manage_sessions():
                 "session_id": session.id,
                 "agent_id": agent.id,
                 "case_id": coaching_case.id,
-                "coaching_type": coaching_type,
-                "channel": channel,
-                "score": score,
-                "action_item_count": len(action_titles[:10]),
+                "coaching_type": session.coaching_type,
+                "channel": session.channel,
+                "score": session.score,
+                "action_item_count": action_count,
             },
             actor_user_id=current_user.id,
         )
@@ -481,23 +434,7 @@ def manage_sessions():
     sessions = sessions_q.order_by(CoachingSession.occurred_at.desc()).limit(30).all()
     agents = agents_q.order_by(AgentProfile.full_name.asc()).all()
     session_ids = [session.id for session in sessions]
-    action_rows = (
-        db.session.query(
-            CoachingActionItem.coaching_session_id,
-            func.count(CoachingActionItem.id).label("total_count"),
-            func.sum(case((CoachingActionItem.status == "completed", 1), else_=0)).label("completed_count"),
-        )
-        .filter(CoachingActionItem.tenant_id == tenant.id, CoachingActionItem.coaching_session_id.in_(session_ids) if session_ids else False)
-        .group_by(CoachingActionItem.coaching_session_id)
-        .all()
-    )
-    session_action_summary = {
-        row.coaching_session_id: {
-            "total": int(row.total_count or 0),
-            "completed": int(row.completed_count or 0),
-        }
-        for row in action_rows
-    }
+    session_action_summary = session_action_completion_map(tenant_id=tenant.id, session_ids=session_ids)
     return render_template(
         "workspace/sessions.html",
         sessions=sessions,

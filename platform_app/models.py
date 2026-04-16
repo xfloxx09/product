@@ -70,6 +70,54 @@ class Team(TimestampMixin, db.Model):
     manager_name = db.Column(db.String(150), nullable=True)
 
 
+class Program(TimestampMixin, db.Model):
+    __tablename__ = "programs"
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "key", name="uq_program_tenant_key"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    key = db.Column(db.String(80), nullable=False, index=True)
+    name = db.Column(db.String(140), nullable=False)
+    channel = db.Column(db.String(30), nullable=False, default="inbound")
+    industry = db.Column(db.String(50), nullable=False, default="telecom")
+    client_name = db.Column(db.String(150), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class SkillProfile(TimestampMixin, db.Model):
+    __tablename__ = "skill_profiles"
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "key", name="uq_skill_profile_tenant_key"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    key = db.Column(db.String(80), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=False)
+    direction = db.Column(db.String(30), nullable=False, default="inbound")
+    language = db.Column(db.String(20), nullable=False, default="de")
+    product_line = db.Column(db.String(80), nullable=True)
+
+
+class PolicyPack(TimestampMixin, db.Model):
+    __tablename__ = "policy_packs"
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "name", name="uq_policy_pack_tenant_name"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=False)
+    cadence_days = db.Column(db.Integer, nullable=False, default=30)
+    reminder_sla_hours = db.Column(db.Integer, nullable=False, default=48)
+    escalation_hours = db.Column(db.Integer, nullable=False, default=72)
+    notes_retention_days = db.Column(db.Integer, nullable=False, default=365)
+    is_default = db.Column(db.Boolean, nullable=False, default=False)
+    config_json = db.Column(db.Text, nullable=False, default="{}")
+
+
 class TenantRole(TimestampMixin, db.Model):
     __tablename__ = "tenant_roles"
     __table_args__ = (
@@ -105,11 +153,15 @@ class AgentProfile(TimestampMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"), nullable=True, index=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), nullable=True, index=True)
+    skill_profile_id = db.Column(db.Integer, db.ForeignKey("skill_profiles.id"), nullable=True, index=True)
     employee_code = db.Column(db.String(100), nullable=False)
     full_name = db.Column(db.String(150), nullable=False)
     status = db.Column(db.String(30), nullable=False, default="active")
 
     team = db.relationship("Team")
+    program = db.relationship("Program")
+    skill_profile = db.relationship("SkillProfile")
 
 
 class CoachingSession(TimestampMixin, db.Model):
@@ -120,15 +172,20 @@ class CoachingSession(TimestampMixin, db.Model):
     coaching_case_id = db.Column(db.Integer, db.ForeignKey("coaching_cases.id"), nullable=True, index=True)
     agent_id = db.Column(db.Integer, db.ForeignKey("agent_profiles.id"), nullable=False, index=True)
     coach_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=False, index=True)
+    policy_pack_id = db.Column(db.Integer, db.ForeignKey("policy_packs.id"), nullable=True, index=True)
     coaching_type = db.Column(db.String(80), nullable=False, default="quality")
     channel = db.Column(db.String(30), nullable=False, default="call")
+    subject = db.Column(db.String(255), nullable=True)
     score = db.Column(db.Float, nullable=True)
     occurred_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     notes = db.Column(db.Text, nullable=True)
+    coach_notes = db.Column(db.Text, nullable=True)
+    customer_journey_stage = db.Column(db.String(50), nullable=True)
 
     agent = db.relationship("AgentProfile")
     coach = db.relationship("TenantUser")
     coaching_case = db.relationship("CoachingCase")
+    policy_pack = db.relationship("PolicyPack")
 
 
 class CoachingActionItem(TimestampMixin, db.Model):
@@ -140,8 +197,11 @@ class CoachingActionItem(TimestampMixin, db.Model):
     owner_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=True, index=True)
     title = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), nullable=False, default="open")
+    priority = db.Column(db.String(20), nullable=False, default="normal")
     due_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
+    escalated_at = db.Column(db.DateTime, nullable=True)
+    pii_tags_json = db.Column(db.Text, nullable=False, default="[]")
 
     coaching_session = db.relationship("CoachingSession")
     owner = db.relationship("TenantUser")
@@ -166,6 +226,7 @@ class CoachingCase(TimestampMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), nullable=True, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"), nullable=True, index=True)
     agent_id = db.Column(db.Integer, db.ForeignKey("agent_profiles.id"), nullable=False, index=True)
     requested_by_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=True, index=True)
@@ -176,8 +237,13 @@ class CoachingCase(TimestampMixin, db.Model):
     priority = db.Column(db.String(20), nullable=False, default="normal")
     status = db.Column(db.String(30), nullable=False, default="open")
     due_at = db.Column(db.DateTime, nullable=True)
+    opened_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    planned_at = db.Column(db.DateTime, nullable=True)
+    started_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
+    closed_at = db.Column(db.DateTime, nullable=True)
 
+    program = db.relationship("Program")
     team = db.relationship("Team")
     agent = db.relationship("AgentProfile")
     requester = db.relationship("TenantUser", foreign_keys=[requested_by_user_id])
@@ -193,8 +259,82 @@ class ScorecardTemplate(TimestampMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), nullable=True, index=True)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     config_json = db.Column(db.Text, nullable=False, default="{}")
+
+    program = db.relationship("Program")
+
+
+class EvaluationTemplate(TimestampMixin, db.Model):
+    __tablename__ = "evaluation_templates"
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "name", name="uq_eval_template_tenant_name"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), nullable=True, index=True)
+    policy_pack_id = db.Column(db.Integer, db.ForeignKey("policy_packs.id"), nullable=True, index=True)
+    name = db.Column(db.String(120), nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    status = db.Column(db.String(30), nullable=False, default="draft")
+    config_json = db.Column(db.Text, nullable=False, default="{}")
+
+    program = db.relationship("Program")
+    policy_pack = db.relationship("PolicyPack")
+
+
+class EvaluationItem(TimestampMixin, db.Model):
+    __tablename__ = "evaluation_items"
+    __table_args__ = (
+        db.UniqueConstraint("template_id", "key", name="uq_eval_item_template_key"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    template_id = db.Column(db.Integer, db.ForeignKey("evaluation_templates.id"), nullable=False, index=True)
+    key = db.Column(db.String(80), nullable=False)
+    label = db.Column(db.String(160), nullable=False)
+    weight = db.Column(db.Float, nullable=False, default=1.0)
+    is_required = db.Column(db.Boolean, nullable=False, default=True)
+    pii_classification = db.Column(db.String(30), nullable=False, default="none")
+    config_json = db.Column(db.Text, nullable=False, default="{}")
+
+    template = db.relationship("EvaluationTemplate")
+
+
+class CalibrationSession(TimestampMixin, db.Model):
+    __tablename__ = "calibration_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    program_id = db.Column(db.Integer, db.ForeignKey("programs.id"), nullable=True, index=True)
+    evaluation_template_id = db.Column(db.Integer, db.ForeignKey("evaluation_templates.id"), nullable=True, index=True)
+    facilitator_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=False, index=True)
+    status = db.Column(db.String(30), nullable=False, default="scheduled")
+    scheduled_for = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    summary_json = db.Column(db.Text, nullable=False, default="{}")
+
+    program = db.relationship("Program")
+    facilitator = db.relationship("TenantUser")
+    evaluation_template = db.relationship("EvaluationTemplate")
+
+
+class DataContract(TimestampMixin, db.Model):
+    __tablename__ = "data_contracts"
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "source_type", "version", name="uq_data_contract_source_version"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    source_type = db.Column(db.String(30), nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1)
+    status = db.Column(db.String(20), nullable=False, default="active")
+    schema_json = db.Column(db.Text, nullable=False, default="{}")
+    mapping_rules_json = db.Column(db.Text, nullable=False, default="{}")
 
 
 class Subscription(TimestampMixin, db.Model):
@@ -301,6 +441,7 @@ class DataSource(TimestampMixin, db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
     source_type = db.Column(db.String(30), nullable=False, default="csv_upload")
+    data_contract_id = db.Column(db.Integer, db.ForeignKey("data_contracts.id"), nullable=True, index=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     schedule = db.Column(db.String(40), nullable=False, default="manual")
     config_json = db.Column(db.Text, nullable=False, default="{}")
@@ -315,6 +456,9 @@ class DataSource(TimestampMixin, db.Model):
     last_health_alert_status = db.Column(db.String(20), nullable=True)
     last_error = db.Column(db.String(255), nullable=True)
     failure_count = db.Column(db.Integer, nullable=False, default=0)
+    pii_tags_json = db.Column(db.Text, nullable=False, default="[]")
+
+    data_contract = db.relationship("DataContract")
 
 
 class DataSourceAlertEvent(TimestampMixin, db.Model):
@@ -378,3 +522,18 @@ class ConnectorSecret(TimestampMixin, db.Model):
     data_source_id = db.Column(db.Integer, db.ForeignKey("data_sources.id"), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     cipher_text = db.Column(db.Text, nullable=False)
+    rotation_version = db.Column(db.Integer, nullable=False, default=1)
+
+
+class DomainEvent(TimestampMixin, db.Model):
+    __tablename__ = "domain_events"
+    __table_args__ = (
+        db.Index("ix_domain_events_tenant_type_created", "tenant_id", "event_type", "created_at"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    aggregate_type = db.Column(db.String(50), nullable=False)
+    aggregate_id = db.Column(db.Integer, nullable=False, index=True)
+    event_type = db.Column(db.String(120), nullable=False)
+    payload_json = db.Column(db.Text, nullable=False, default="{}")

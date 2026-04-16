@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Alert Policy Simulator - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Alert Policy Simulator{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Alert Policy Simulator</h1>
+        <h1 class="entity-title"><i class="bi bi-sliders2"></i> Alert Policy Simulator</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <p>Source: <strong>{{ source.name }}</strong></p>
         <p>
@@ -16,7 +18,7 @@
                 <option value="unhealthy" {% if simulate_status == "unhealthy" %}selected{% endif %}>Unhealthy</option>
                 <option value="degraded" {% if simulate_status == "degraded" %}selected{% endif %}>Degraded</option>
             </select>
-            <button class="btn btn-primary" type="submit">Run Simulation</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-play-circle"></i> Run Simulation</button>
         </form>
     </article>
 

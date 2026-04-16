@@ -2,7 +2,7 @@
 {% block title %}Register Owner - CoachingOS{% endblock %}
 {% block content %}
 <section>
-    <h1>Register workspace owner</h1>
+    <h1 class="entity-title"><i class="bi bi-person-vcard"></i> Register workspace owner</h1>
     <form method="post" class="card form-card">
         <label>Workspace slug</label>
         <input type="text" name="tenant_slug" required>
@@ -16,7 +16,7 @@
         <label>Password</label>
         <input type="password" name="password" minlength="10" required>
 
-        <button class="btn btn-primary" type="submit">Create owner account</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-person-check"></i> Create owner account</button>
     </form>
 </section>
 {% endblock %}

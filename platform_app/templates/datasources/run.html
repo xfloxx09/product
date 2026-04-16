@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Run Data Source - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Run Data Source{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Run Data Source</h1>
+    <h1 class="entity-title"><i class="bi bi-play-circle"></i> Run Data Source</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <p>Source: <strong>{{ source.name }}</strong> ({{ source.source_type }})</p>
     <p><a href="{{ url_for('datasources.source_settings', source_id=source.id, tenant=tenant.slug) }}">Open source settings</a></p>
@@ -24,7 +26,7 @@
             <p>This connector reads configuration from the data source settings and pulls data automatically.</p>
         {% endif %}
 
-        <button class="btn btn-primary" type="submit">Run sync</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-lightning-charge"></i> Run sync</button>
     </form>
 </section>
 {% endblock %}

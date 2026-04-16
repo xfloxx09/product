@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Billing Portal - CoachingOS{% endblock %}
+{% block page_eyebrow %}Commercial{% endblock %}
+{% block page_title %}Billing Portal{% endblock %}
 {% block content %}
 <section class="card">
-    <h1>Billing portal</h1>
+    <h1 class="entity-title"><i class="bi bi-credit-card-2-front"></i> Billing portal</h1>
     <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
     <p>Current plan: <strong>{{ plan_definition.name }}</strong> ({{ plan_definition.price }})</p>
     <p>
@@ -26,7 +28,7 @@
             </tbody>
         </table>
         <form method="post" action="{{ url_for('billing.portal_session') }}" style="margin-top:12px;">
-            <button class="btn btn-primary" type="submit">Open Stripe Billing Portal</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-up-right-circle"></i> Open Stripe Billing Portal</button>
         </form>
     {% else %}
         <p>No subscription record found.</p>

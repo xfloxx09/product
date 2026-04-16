@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Webhook Verification - CoachingOS{% endblock %}
+{% block page_eyebrow %}Integrations{% endblock %}
+{% block page_title %}Webhook Verification Helper{% endblock %}
 {% block content %}
 <section class="grid">
     <article class="card">
-        <h1>Webhook Verification Helper</h1>
+        <h1 class="entity-title"><i class="bi bi-patch-check"></i> Webhook Verification Helper</h1>
         <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
         <p>Source: <strong>{{ source.name }}</strong></p>
         <p><a href="{{ url_for('datasources.source_settings', source_id=source.id) }}">Back to source settings</a></p>
@@ -25,7 +27,7 @@
             <label>Error message</label>
             <input type="text" name="error_message" value="{{ error_message }}">
 
-            <button class="btn btn-primary" type="submit">Regenerate Sample</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat"></i> Regenerate Sample</button>
         </form>
     </article>
 

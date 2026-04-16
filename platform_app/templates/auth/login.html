@@ -2,7 +2,7 @@
 {% block title %}Login - CoachingOS{% endblock %}
 {% block content %}
 <section>
-    <h1>Workspace login</h1>
+    <h1 class="entity-title"><i class="bi bi-box-arrow-in-right"></i> Workspace login</h1>
     <form method="post" class="card form-card">
         <label>Workspace slug</label>
         <input type="text" name="tenant_slug" placeholder="your-company" required>
@@ -13,7 +13,7 @@
         <label>Password</label>
         <input type="password" name="password" required>
 
-        <button class="btn btn-primary" type="submit">Login</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-shield-lock"></i> Login</button>
     </form>
 </section>
 {% endblock %}

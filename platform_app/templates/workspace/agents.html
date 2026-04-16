@@ -31,7 +31,7 @@
                     {% endfor %}
                 </select>
             </label>
-            <button class="btn btn-primary" type="submit">Add agent</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-person-plus"></i> Add agent</button>
         </form>
     </article>
     <article class="card">
@@ -55,27 +55,27 @@
                             <td>{{ agent.team.name if agent.team else "-" }}</td>
                             <td>{{ agent.status }}</td>
                             <td>
-                                <form method="post" style="display:inline">
+                                <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="set_cadence">
                                     <input type="hidden" name="agent_id" value="{{ agent.id }}">
                                     <input type="number" name="cadence_days" min="1" value="{{ cadence.cadence_days if cadence else 30 }}" style="width:90px;">
-                                    <button class="btn btn-secondary" type="submit">Set</button>
+                                    <button class="btn btn-secondary" type="submit"><i class="bi bi-check2"></i> Set</button>
                                 </form>
                             </td>
                             <td>
                                 {% if agent.status == "active" %}
-                                    <form method="post" style="display:inline">
+                                    <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="toggle_status">
                                         <input type="hidden" name="agent_id" value="{{ agent.id }}">
                                         <input type="hidden" name="desired_status" value="inactive">
-                                        <button class="btn btn-secondary" type="submit">Deactivate</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-person-dash"></i> Deactivate</button>
                                     </form>
                                 {% else %}
-                                    <form method="post" style="display:inline">
+                                    <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="toggle_status">
                                         <input type="hidden" name="agent_id" value="{{ agent.id }}">
                                         <input type="hidden" name="desired_status" value="active">
-                                        <button class="btn btn-secondary" type="submit">Activate</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-person-check"></i> Activate</button>
                                     </form>
                                 {% endif %}
                             </td>

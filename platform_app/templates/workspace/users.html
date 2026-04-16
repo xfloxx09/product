@@ -11,7 +11,7 @@
                 <p class="muted">Role assignment, activation, and delegated team scope governance.</p>
             </div>
             <div class="inline-actions">
-                <a class="btn btn-primary" href="{{ url_for('auth.invite_user') }}">Invite user</a>
+                <a class="btn btn-primary" href="{{ url_for('auth.invite_user') }}"><i class="bi bi-envelope-plus"></i> Invite user</a>
                 <a href="{{ url_for('settings.role_settings') }}">Manage roles</a>
             </div>
         </div>
@@ -42,7 +42,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <form method="post" style="display:inline;">
+                                <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="change_role">
                                     <input type="hidden" name="user_id" value="{{ user.id }}">
                                     <select name="new_role" style="width:auto;">
@@ -52,7 +52,7 @@
                                     </select>
                                     <button class="btn btn-secondary" type="submit">Set role</button>
                                 </form>
-                                <form method="post" style="display:inline;">
+                                <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="toggle_active">
                                     <input type="hidden" name="user_id" value="{{ user.id }}">
                                     {% if user.is_active %}
@@ -68,7 +68,7 @@
                         {% if user.role != "owner" and user.id != current_user.id %}
                             <tr>
                                 <td colspan="6">
-                                    <form method="post" style="display:inline;">
+                                    <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="set_team_scope">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
                                         <label style="display:inline;">Delegated teams:</label>
@@ -81,7 +81,7 @@
                                         </select>
                                         <button class="btn btn-secondary" type="submit">Apply team scope</button>
                                     </form>
-                                    <form method="post" style="display:inline;">
+                                    <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="clear_team_scope">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
                                         <button class="btn btn-secondary" type="submit">Grant all teams</button>

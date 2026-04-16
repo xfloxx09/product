@@ -3,22 +3,22 @@
 {% block page_eyebrow %}Coaching Ops{% endblock %}
 {% block page_title %}Operating Hub{% endblock %}
 {% block page_actions %}
-<a class="btn btn-primary" href="#new-case">Create case</a>
+<a class="btn btn-primary" href="#new-case"><i class="bi bi-plus-circle"></i> Create case</a>
 {% endblock %}
 {% block content %}
 <section class="three-up">
-    <article class="card metric">
-        <span class="metric-label">Open workflow</span>
+    <article class="card metric kpi-card">
+        <div class="kpi-head"><span class="metric-label">Open workflow</span><span class="kpi-icon"><i class="bi bi-kanban"></i></span></div>
         <span class="metric-value">{{ case_summary.open + case_summary.planned + case_summary.in_progress + case_summary.follow_up }}</span>
         <span class="muted">Queue, planned, active, follow-up</span>
     </article>
-    <article class="card metric">
-        <span class="metric-label">Due soon</span>
+    <article class="card metric kpi-card">
+        <div class="kpi-head"><span class="metric-label">Due soon</span><span class="kpi-icon"><i class="bi bi-hourglass-split"></i></span></div>
         <span class="metric-value">{{ case_summary.due_soon }}</span>
         <span class="muted">{{ case_summary.overdue }} overdue</span>
     </article>
-    <article class="card metric">
-        <span class="metric-label">Completed cases</span>
+    <article class="card metric kpi-card">
+        <div class="kpi-head"><span class="metric-label">Completed cases</span><span class="kpi-icon"><i class="bi bi-check2-circle"></i></span></div>
         <span class="metric-value">{{ case_summary.completed }}</span>
         <span class="muted">Tracked through coaching sessions</span>
     </article>
@@ -57,7 +57,11 @@
             </tbody>
         </table>
         {% else %}
-        <p class="muted">No coaching cases yet. Completed sessions will now backfill a case automatically, or you can create a planned case here.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-inbox"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-inbox"></i> No coaching cases yet</h4>
+            <p>Completed sessions will backfill cases automatically, or create a planned case from this panel.</p>
+        </div>
         {% endif %}
     </article>
 
@@ -135,7 +139,11 @@
             </tbody>
         </table>
         {% else %}
-        <p class="muted">No completed sessions yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-journal-x"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-journal-x"></i> No completed sessions</h4>
+            <p>Start execution by logging your first coaching session.</p>
+        </div>
         {% endif %}
     </article>
 
@@ -164,7 +172,11 @@
             </tbody>
         </table>
         {% else %}
-        <p class="muted">No open action items right now.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-check2-square"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-check2-square"></i> No open action items</h4>
+            <p>Action follow-through is clear right now across visible teams.</p>
+        </div>
         {% endif %}
     </article>
 </section>
@@ -195,7 +207,11 @@
             </tbody>
         </table>
         {% else %}
-        <p class="muted">No SLA records yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-alarm"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-alarm"></i> No SLA records yet</h4>
+            <p>Set cadences for members and capture sessions to activate SLA tracking.</p>
+        </div>
         {% endif %}
     </article>
 
@@ -224,7 +240,11 @@
             </tbody>
         </table>
         {% else %}
-        <p class="muted">No quality signals yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-activity"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-activity"></i> No quality signals yet</h4>
+            <p>Trend signals appear after enough scored sessions are captured.</p>
+        </div>
         {% endif %}
     </article>
 </section>

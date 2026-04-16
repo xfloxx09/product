@@ -3,7 +3,7 @@
 {% block page_eyebrow %}Coaching Ops{% endblock %}
 {% block page_title %}Completed Sessions{% endblock %}
 {% block page_actions %}
-<a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}">Back to ops hub</a>
+<a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}"><i class="bi bi-arrow-left"></i> Back to ops hub</a>
 {% endblock %}
 {% block content %}
 <section class="split-grid">
@@ -51,12 +51,12 @@
                 <input type="date" name="action_due_at">
             </label>
 
-            <button class="btn btn-primary" type="submit">Save session</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-save2"></i> Save session</button>
         </form>
     </article>
 
-    <article class="card metric">
-        <span class="metric-label">Recent sessions loaded</span>
+    <article class="card metric kpi-card">
+        <div class="kpi-head"><span class="metric-label">Recent sessions loaded</span><span class="kpi-icon"><i class="bi bi-clock-history"></i></span></div>
         <span class="metric-value">{{ sessions|length }}</span>
         <span class="muted">Most recent execution records in scope.</span>
     </article>
@@ -90,7 +90,10 @@
             </tbody>
         </table>
     {% else %}
-        <p>No sessions yet.</p>
+        <div class="empty-state">
+            <h4 class="empty-state-title"><i class="bi bi-journal-x"></i> No sessions yet</h4>
+            <p>Use the form above to log your first coaching execution record.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}
