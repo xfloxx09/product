@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}CoachingOS - Scale Coaching{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>Enterprise coaching command center for call centers.</h1>
+    <p>
+        Built for telecom and energy today, with configurable frameworks to serve
+        any high-volume service organization tomorrow.
+    </p>
+    <div class="cta">
+        <a class="btn btn-primary" href="{{ url_for('onboarding.start') }}">Create workspace</a>
+        <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">Tenant login</a>
+        <a class="btn btn-secondary" href="{{ url_for('public.pricing') }}">View plans</a>
+    </div>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <h3>Multi-tenant core</h3>
+        <p>Every customer has clear boundaries for users, data, and configuration.</p>
+    </article>
+    <article class="card">
+        <h3>Industry templates</h3>
+        <p>Telecom and energy presets with configurable scorecards and import mapping.</p>
+    </article>
+    <article class="card">
+        <h3>Operational intelligence</h3>
+        <p>Track coaching quality, volume, and outcomes across teams at enterprise scale.</p>
+    </article>
+</section>
+{% endblock %}

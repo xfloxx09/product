@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Alert Analytics - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Alert Analytics</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p>Window starts: <strong>{{ since_at }}</strong></p>
+        <p>
+            <a href="{{ url_for('datasources.alert_analytics', tenant=tenant.slug, window='24h') }}">24h</a>
+            |
+            <a href="{{ url_for('datasources.alert_analytics', tenant=tenant.slug, window='7d') }}">7d</a>
+            |
+            <a href="{{ url_for('datasources.alert_analytics', tenant=tenant.slug, window='30d') }}">30d</a>
+            |
+            <a href="{{ url_for('datasources.list_sources', tenant=tenant.slug) }}">Back to Data Sources</a>
+        </p>
+    </article>
+
+    <article class="card">
+        <h3>Delivery Overview</h3>
+        <p>Total events: <strong>{{ total_events }}</strong></p>
+        <p>Attempted deliveries: <strong>{{ attempted_count }}</strong></p>
+        <p>Successful attempts: <strong>{{ success_count }}</strong> ({{ success_rate_pct }}%)</p>
+        <p>Failed attempts: <strong>{{ failed_count }}</strong> ({{ failure_rate_pct }}%)</p>
+        <p>Skipped (no channel attempt): <strong>{{ skipped_count }}</strong></p>
+    </article>
+
+    <article class="card">
+        <h3>Channel and Trigger Mix</h3>
+        <p>Email sends: <strong>{{ sent_email_total }}</strong></p>
+        <p>Webhook sends: <strong>{{ sent_webhook_total }}</strong></p>
+        <p>Automatic alerts: <strong>{{ automatic_count }}</strong></p>
+        <p>Manual test alerts: <strong>{{ manual_count }}</strong></p>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Top Failing Sources</h3>
+    {% if top_failing_sources %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Source</th><th>Failed Events</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for row in top_failing_sources %}
+                    <tr>
+                        <td>{{ row.source_name }}</td>
+                        <td>{{ row.failed_events }}</td>
+                        <td><a href="{{ url_for('datasources.source_settings', source_id=row.source_id, tenant=tenant.slug) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No failing sources in the selected window.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Daily Delivery Trend</h3>
+    {% if trend %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Day</th><th>Total Events</th><th>Failed Events</th><th>Failure %</th></tr>
+            </thead>
+            <tbody>
+                {% for point in trend %}
+                    <tr>
+                        <td>{{ point.label }}</td>
+                        <td>{{ point.total }}</td>
+                        <td>{{ point.failed }}</td>
+                        <td>
+                            {% if point.total %}
+                                {{ ((point.failed / point.total) * 100)|round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No alert events in the trend window.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Recent Failed Deliveries</h3>
+    {% if recent_failures %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Time</th><th>Source</th><th>Trigger</th><th>Status</th><th>Email</th><th>Webhook</th><th>Error</th></tr>
+            </thead>
+            <tbody>
+                {% for row in recent_failures %}
+                    <tr>
+                        <td>{{ row.created_at }}</td>
+                        <td>{{ row.source_name }}</td>
+                        <td>{{ row.trigger_type }}</td>
+                        <td>{{ row.health_status }}</td>
+                        <td>{{ row.sent_email }}</td>
+                        <td>{{ row.sent_webhook }}</td>
+                        <td>{{ row.error_message or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No failed deliveries in the selected window.</p>
+    {% endif %}
+</section>
+{% endblock %}

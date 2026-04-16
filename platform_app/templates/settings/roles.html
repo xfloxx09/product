@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Role Management - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Role Management</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p><a href="{{ url_for('settings.workspace_settings') }}">Back to Workspace Settings</a></p>
+        <form method="post" class="form-card">
+            <input type="hidden" name="action" value="upsert">
+            <label>Role key</label>
+            <input type="text" name="role_key" placeholder="qa_lead" required>
+            <small>Use lowercase, numbers, dashes, or underscores.</small>
+
+            <label>Display name</label>
+            <input type="text" name="display_name" placeholder="QA Lead" required>
+
+            <label>Permissions</label>
+            <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px;">
+                {% for permission in all_permissions %}
+                    <label><input type="checkbox" name="permissions" value="{{ permission }}"> {{ permission }}</label>
+                {% endfor %}
+            </div>
+
+            <button class="btn btn-primary" type="submit">Create / Update Role</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Configured roles</h3>
+        {% if roles %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Role key</th><th>Name</th><th>Permissions</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                        <tr>
+                            <td>{{ role.role_key }}</td>
+                            <td>{{ role.display_name }}</td>
+                            <td>{{ role.permissions|join(", ") if role.permissions else "-" }}</td>
+                            <td>
+                                {% if role.role_key not in ["owner", "admin", "manager", "coach", "viewer"] %}
+                                    <form method="post" style="display:inline;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="role_key" value="{{ role.role_key }}">
+                                        <button class="btn btn-secondary" type="submit">Delete</button>
+                                    </form>
+                                {% else %}
+                                    <small>system role</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No roles configured.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

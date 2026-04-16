@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Plan Catalog Settings - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Plan Catalog Management</h1>
+    <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+    <p>
+        Configure plan names, prices, active-member capacity, and feature unlocks.
+        Leave active member limit empty for unlimited.
+    </p>
+    <p><a href="{{ url_for('settings.workspace_settings') }}">Back to Workspace Settings</a></p>
+
+    <form method="post" class="form-card">
+        {% for plan in plans %}
+            <fieldset style="margin: 12px 0; padding: 12px; border: 1px solid #d9d9d9;">
+                <legend><strong>{{ plan.id|capitalize }}</strong></legend>
+
+                <label>Name</label>
+                <input type="text" name="{{ plan.id }}_name" value="{{ plan.name }}" required>
+
+                <label>Price label</label>
+                <input type="text" name="{{ plan.id }}_price" value="{{ plan.price }}" required>
+
+                <label>Active member limit</label>
+                <input
+                    type="number"
+                    min="1"
+                    name="{{ plan.id }}_active_members"
+                    value="{{ plan.limits.active_members if plan.limits.active_members is not none else '' }}"
+                    placeholder="Unlimited when empty"
+                >
+
+                <p><strong>Feature unlocks</strong></p>
+                {% for key in feature_keys %}
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="{{ plan.id }}_feature_{{ key }}"
+                            value="1"
+                            {% if plan.features.get(key) %}checked{% endif %}
+                        >
+                        {{ key }}
+                    </label>
+                {% endfor %}
+            </fieldset>
+        {% endfor %}
+
+        <button class="btn btn-primary" type="submit">Save Plan Catalog</button>
+    </form>
+</section>
+{% endblock %}

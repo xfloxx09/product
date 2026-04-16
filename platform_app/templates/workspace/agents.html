@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Agents - CoachingOS{% endblock %}
+{% block page_eyebrow %}People{% endblock %}
+{% block page_title %}Members{% endblock %}
+{% block content %}
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Workforce registry</h2>
+                <p class="muted">
+                    Active members:
+                    {{ active_members_limit.current }}
+                    {% if active_members_limit.limit is not none %}/{{ active_members_limit.limit }}{% else %}/Unlimited{% endif %}
+                </p>
+            </div>
+        </div>
+        <form method="post" class="stack">
+            <input type="hidden" name="action" value="create_agent">
+            <label>Full name
+                <input type="text" name="full_name" required>
+            </label>
+            <label>Employee code
+                <input type="text" name="employee_code" required>
+            </label>
+            <label>Team
+                <select name="team_id">
+                    <option value="">- None -</option>
+                    {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button class="btn btn-primary" type="submit">Add agent</button>
+        </form>
+    </article>
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Existing members</h2>
+                <p class="muted">Status and cadence controls that support the coaching operations layer.</p>
+            </div>
+        </div>
+        {% if agents %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Name</th><th>Code</th><th>Team</th><th>Status</th><th>Cadence</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for agent in agents %}
+                        {% set cadence = cadence_rows.get(agent.id) %}
+                        <tr>
+                            <td>{{ agent.full_name }}</td>
+                            <td>{{ agent.employee_code }}</td>
+                            <td>{{ agent.team.name if agent.team else "-" }}</td>
+                            <td>{{ agent.status }}</td>
+                            <td>
+                                <form method="post" style="display:inline">
+                                    <input type="hidden" name="action" value="set_cadence">
+                                    <input type="hidden" name="agent_id" value="{{ agent.id }}">
+                                    <input type="number" name="cadence_days" min="1" value="{{ cadence.cadence_days if cadence else 30 }}" style="width:90px;">
+                                    <button class="btn btn-secondary" type="submit">Set</button>
+                                </form>
+                            </td>
+                            <td>
+                                {% if agent.status == "active" %}
+                                    <form method="post" style="display:inline">
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <input type="hidden" name="agent_id" value="{{ agent.id }}">
+                                        <input type="hidden" name="desired_status" value="inactive">
+                                        <button class="btn btn-secondary" type="submit">Deactivate</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" style="display:inline">
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <input type="hidden" name="agent_id" value="{{ agent.id }}">
+                                        <input type="hidden" name="desired_status" value="active">
+                                        <button class="btn btn-secondary" type="submit">Activate</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No agents yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

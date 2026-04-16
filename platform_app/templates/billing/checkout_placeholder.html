@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Checkout - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Checkout</h1>
+    <p>
+        Tenant: <strong>{{ tenant or "not selected" }}</strong>
+    </p>
+    <form method="post" class="form-card">
+        <input type="hidden" name="tenant" value="{{ tenant }}">
+        <label>Plan</label>
+        <select name="plan">
+            {% for plan in plans %}
+                <option value="{{ plan.id }}" {% if selected_plan == plan.id %}selected{% endif %}>
+                    {{ plan.name }} ({{ plan.price }})
+                </option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Continue to checkout</button>
+    </form>
+    <p>
+        If Stripe is configured, this will create a live Checkout Session.
+        If not configured yet, the system falls back to mock activation for development.
+    </p>
+</section>
+{% endblock %}

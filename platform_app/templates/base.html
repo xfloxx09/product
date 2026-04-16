@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Coaching Platform{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div>
+                <a href="{{ url_for('workspace.dashboard') }}" class="brand brand-sidebar">CoachingOS</a>
+                <p class="sidebar-kicker">Enterprise Coaching OS</p>
+                <div class="workspace-chip">
+                    <strong>{{ current_user.tenant.name or current_user.tenant.slug }}</strong>
+                    <span>{{ current_user.role|replace('_', ' ')|title }}</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-group">
+                    <div class="nav-group-label">Overview</div>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.dashboard' else '' }}" href="{{ url_for('workspace.dashboard') }}">Executive overview</a>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-label">Coaching Ops</div>
+                    {% if has_permission('workspace.view') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_ops_hub' else '' }}" href="{{ url_for('workspace.coaching_ops_hub', tenant=current_user.tenant.slug) }}">Ops hub</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.quality_insights_dashboard' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=current_user.tenant.slug) }}">Quality insights</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_sla_dashboard' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=current_user.tenant.slug) }}">SLA board</a>
+                    {% endif %}
+                    {% if has_permission('workspace.manage_sessions') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}">Completed sessions</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}">Follow-up actions</a>
+                    {% endif %}
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-label">People</div>
+                    {% if has_permission('workspace.manage_agents') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_agents' else '' }}" href="{{ url_for('workspace.manage_agents') }}">Members</a>
+                    {% endif %}
+                    {% if has_permission('workspace.manage_teams') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_teams' else '' }}" href="{{ url_for('workspace.manage_teams') }}">Teams</a>
+                    {% endif %}
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-label">Governance</div>
+                    {% if has_permission('workspace.manage_users') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_users' else '' }}" href="{{ url_for('workspace.manage_users') }}">Users and access</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'auth.invite_user' else '' }}" href="{{ url_for('auth.invite_user') }}">Invitations</a>
+                    {% endif %}
+                    {% if has_permission('settings.manage') %}
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('settings.') else '' }}" href="{{ url_for('settings.workspace_settings') }}">Settings</a>
+                    {% endif %}
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-label">Integrations</div>
+                    {% if has_permission('workspace.manage_imports') %}
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.mapper' else '' }}" href="{{ url_for('imports.mapper', tenant=current_user.tenant.slug) }}">CSV mapper</a>
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.new_job' else '' }}" href="{{ url_for('imports.new_job', tenant=current_user.tenant.slug) }}">Imports</a>
+                    {% endif %}
+                    {% if has_permission('workspace.manage_integrations') %}
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('datasources.') else '' }}" href="{{ url_for('datasources.list_sources', tenant=current_user.tenant.slug) }}">Data sources</a>
+                    {% endif %}
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-label">Billing</div>
+                    {% if has_permission('billing.manage') %}
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('billing.') else '' }}" href="{{ url_for('billing.billing_portal') }}">Plan and billing</a>
+                    {% endif %}
+                </div>
+            </nav>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <button class="btn btn-secondary btn-block" type="submit">Logout</button>
+            </form>
+        </aside>
+
+        <main class="app-main">
+            <header class="topbar">
+                <div>
+                    <div class="eyebrow">{% block page_eyebrow %}Workspace{% endblock %}</div>
+                    <h1 class="page-title">{% block page_title %}{{ self.title()|striptags }}{% endblock %}</h1>
+                </div>
+                <div class="topbar-meta">
+                    <span class="scope-pill">
+                        {% if current_user.tenant %}
+                            Scope: {{ current_user.tenant.slug }}
+                        {% else %}
+                            Authenticated
+                        {% endif %}
+                    </span>
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <section class="page-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <section class="alerts">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+    </div>
+    {% else %}
+    <header class="site-header">
+        <div class="container row">
+            <a href="{{ url_for('public.home') }}" class="brand">CoachingOS</a>
+            <nav class="nav">
+                <a href="{{ url_for('public.pricing') }}">Pricing</a>
+                <a href="{{ url_for('onboarding.start') }}">Start Setup</a>
+                <a href="{{ url_for('billing.checkout_placeholder') }}">Checkout</a>
+                <a href="{{ url_for('auth.login') }}">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    {% endif %}
+</body>
+</html>

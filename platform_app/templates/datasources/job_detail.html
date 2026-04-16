@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Sync Job {{ job.id }} - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Sync job #{{ job.id }}</h1>
+    <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+    <table class="table-like">
+        <tbody>
+            <tr><th>Data source</th><td>{{ job.data_source.name }}</td></tr>
+            <tr><th>Run mode</th><td>{{ job.run_mode }}</td></tr>
+            <tr><th>Status</th><td>{{ job.status }}</td></tr>
+            <tr><th>Attempt</th><td>{{ job.attempt_count }}</td></tr>
+            <tr><th>Started at</th><td>{{ job.started_at or "-" }}</td></tr>
+            <tr><th>Finished at</th><td>{{ job.finished_at or "-" }}</td></tr>
+            <tr><th>File</th><td>{{ job.source_filename or "-" }}</td></tr>
+            <tr><th>Total rows</th><td>{{ job.total_rows }}</td></tr>
+            <tr><th>Success rows</th><td>{{ job.success_rows }}</td></tr>
+            <tr><th>Failed rows</th><td>{{ job.failed_rows }}</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="card">
+    <h3>Summary</h3>
+    <pre>{{ summary }}</pre>
+</section>
+
+<section class="card">
+    <h3>Row errors (first 100)</h3>
+    {% if errors %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Row</th><th>Error</th><th>Payload</th></tr>
+            </thead>
+            <tbody>
+                {% for err in errors %}
+                    <tr>
+                        <td>{{ err.row_number }}</td>
+                        <td>{{ err.error_message }}</td>
+                        <td>{{ err.row_payload_json }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No row errors.</p>
+    {% endif %}
+</section>
+{% endblock %}

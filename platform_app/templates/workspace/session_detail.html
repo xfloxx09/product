@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Session Detail - CoachingOS{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>Coaching Session Detail</h1>
+    <p>Agent: {{ session.agent.full_name }} | Coach: {{ session.coach.full_name }}</p>
+    <p><a href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}">Back to sessions</a></p>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <h3>Session Summary</h3>
+        <p>Type: <strong>{{ session.coaching_type }}</strong></p>
+        <p>Channel: <strong>{{ session.channel }}</strong></p>
+        <p>Score: <strong>{{ session.score if session.score is not none else "-" }}</strong></p>
+        <p>Occurred: <strong>{{ session.occurred_at }}</strong></p>
+        <p>Notes: <strong>{{ session.notes or "-" }}</strong></p>
+    </article>
+
+    <article class="card">
+        <h3>Add Action Item</h3>
+        <form method="post" class="form-card">
+            <input type="hidden" name="action" value="add_action_item">
+            <label>Title</label>
+            <input type="text" name="title" required>
+            <label>Due date</label>
+            <input type="date" name="due_at">
+            <button class="btn btn-primary" type="submit">Add action item</button>
+        </form>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Action Plan</h3>
+    {% if action_items %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Title</th><th>Status</th><th>Due</th><th>Completed</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for item in action_items %}
+                    <tr>
+                        <td>{{ item.title }}</td>
+                        <td>{{ item.status }}</td>
+                        <td>{{ item.due_at or "-" }}</td>
+                        <td>{{ item.completed_at or "-" }}</td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="action" value="toggle_action_status">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <button class="btn btn-secondary" type="submit">
+                                    {% if item.status == "completed" %}Reopen{% else %}Complete{% endif %}
+                                </button>
+                            </form>
+                            {% if item.status != "completed" %}
+                                <form method="post" style="display:inline;">
+                                    <input type="hidden" name="action" value="send_reminder">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button class="btn btn-secondary" type="submit">Send reminder</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No action items yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

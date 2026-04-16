@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Alert Policy Simulator - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Alert Policy Simulator</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p>Source: <strong>{{ source.name }}</strong></p>
+        <p>
+            <a href="{{ url_for('datasources.source_settings', source_id=source.id, tenant=tenant.slug) }}">Back to source settings</a>
+        </p>
+
+        <form method="post" class="form-card">
+            <label>Simulated health status</label>
+            <select name="simulate_status">
+                <option value="unhealthy" {% if simulate_status == "unhealthy" %}selected{% endif %}>Unhealthy</option>
+                <option value="degraded" {% if simulate_status == "degraded" %}selected{% endif %}>Degraded</option>
+            </select>
+            <button class="btn btn-primary" type="submit">Run Simulation</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Simulation Result</h3>
+        <p>
+            Decision:
+            {% if evaluation.will_send %}
+                <strong>Would send alert</strong>
+            {% else %}
+                <strong>Would suppress alert</strong>
+            {% endif %}
+        </p>
+        <p>Reason: <strong>{{ evaluation.reason }}</strong></p>
+        <p>Effective cooldown: <strong>{{ evaluation.cooldown_minutes }} minutes</strong></p>
+        <p>Email channel enabled by policy: <strong>{{ "Yes" if evaluation.channel_email else "No" }}</strong></p>
+        <p>Webhook channel enabled by policy: <strong>{{ "Yes" if evaluation.channel_webhook else "No" }}</strong></p>
+        {% if evaluation.minutes_until_next_send is not none %}
+            <p>Minutes until next allowed send: <strong>{{ evaluation.minutes_until_next_send }}</strong></p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h3>Current Source Alert State</h3>
+        <p>Last alert status: <strong>{{ source.last_health_alert_status or "-" }}</strong></p>
+        <p>Last alerted at: <strong>{{ source.last_health_alerted_at or "-" }}</strong></p>
+        <p>Current health status: <strong>{{ source.health_status }}</strong></p>
+    </article>
+</section>
+{% endblock %}

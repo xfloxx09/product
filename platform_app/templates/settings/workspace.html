@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Workspace Settings - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Workspace settings</h1>
+    <p>Tenant: <strong>{{ tenant.slug }}</strong></p>
+    <p><a href="{{ url_for('settings.plan_catalog_settings') }}">Open Plan Catalog Management</a></p>
+    <p><a href="{{ url_for('settings.role_settings') }}">Open Role Management</a></p>
+    <form method="post" class="form-card">
+        <label>Industry</label>
+        <select name="industry">
+            <option value="telecom" {% if tenant.industry == "telecom" %}selected{% endif %}>Telecommunications</option>
+            <option value="energy" {% if tenant.industry == "energy" %}selected{% endif %}>Energy</option>
+            <option value="generic" {% if tenant.industry == "generic" %}selected{% endif %}>Generic</option>
+        </select>
+
+        <label>Locale</label>
+        <input type="text" name="locale" value="{{ tenant.locale }}">
+
+        {% if scorecard %}
+            <label>Default scorecard name</label>
+            <input type="text" name="scorecard_name" value="{{ scorecard.name }}">
+
+            <label>Default scorecard JSON</label>
+            <textarea name="scorecard_json" rows="10">{{ scorecard.config_json }}</textarea>
+        {% endif %}
+
+        <button class="btn btn-primary" type="submit">Save settings</button>
+    </form>
+</section>
+{% endblock %}

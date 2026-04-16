@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}New Import Job - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>New CSV import job</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <form method="post" enctype="multipart/form-data" class="form-card">
+            <label>CSV file</label>
+            <input type="file" name="csv_file" accept=".csv,text/csv" required>
+
+            <label>Run mode</label>
+            <select name="run_mode">
+                <option value="dry_run" selected>Dry run (preview only)</option>
+                <option value="apply">Apply (write to database)</option>
+            </select>
+
+            <label>Score scale</label>
+            <select name="score_scale">
+                <option value="auto" selected>Auto (0-1 converts to 0-100)</option>
+                <option value="0_100">Already 0-100</option>
+                <option value="0_1">Always convert 0-1 to 0-100</option>
+            </select>
+
+            <label>Date format (optional)</label>
+            <input type="text" name="date_format" placeholder="%Y-%m-%d or %d.%m.%Y">
+
+            <label><input type="checkbox" name="decimal_comma" value="1"> Parse decimal comma (e.g. 87,5)</label>
+            <label><input type="checkbox" name="strip_percent" value="1" checked> Strip percent sign from score</label>
+
+            <button class="btn btn-primary" type="submit">Run import</button>
+        </form>
+    </article>
+    <article class="card">
+        <h3>Current mapping snapshot</h3>
+        <pre>{{ mapping }}</pre>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Recent import jobs</h3>
+    {% if recent_jobs %}
+        <table class="table-like">
+            <thead>
+                <tr><th>ID</th><th>Mode</th><th>File</th><th>Status</th><th>Rows</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for job in recent_jobs %}
+                    <tr>
+                        <td>{{ job.id }}</td>
+                        <td>{{ job.run_mode }}</td>
+                        <td>{{ job.source_filename }}</td>
+                        <td>{{ job.status }}</td>
+                        <td>{{ job.success_rows }}/{{ job.total_rows }}</td>
+                        <td><a href="{{ url_for('imports.job_detail', job_id=job.id, tenant=tenant.slug) }}">Details</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No import jobs yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

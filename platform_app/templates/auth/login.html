@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Login - CoachingOS{% endblock %}
+{% block content %}
+<section>
+    <h1>Workspace login</h1>
+    <form method="post" class="card form-card">
+        <label>Workspace slug</label>
+        <input type="text" name="tenant_slug" placeholder="your-company" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <button class="btn btn-primary" type="submit">Login</button>
+    </form>
+</section>
+{% endblock %}

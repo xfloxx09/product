@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Teams - CoachingOS{% endblock %}
+{% block page_eyebrow %}People{% endblock %}
+{% block page_title %}Teams{% endblock %}
+{% block content %}
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Team directory</h2>
+                <p class="muted">Organize member populations, managers, and scoped governance.</p>
+            </div>
+        </div>
+        <form method="post" class="stack">
+            <label>Team name
+                <input type="text" name="name" required>
+            </label>
+            <label>Manager name
+                <input type="text" name="manager_name">
+            </label>
+            <button class="btn btn-primary" type="submit">Add team</button>
+        </form>
+    </article>
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Existing teams</h2>
+                <p class="muted">Current operating units available for people, reporting, and scopes.</p>
+            </div>
+        </div>
+        {% if teams %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Team</th><th>Manager</th></tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td>{{ team.name }}</td>
+                        <td>{{ team.manager_name or "-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No teams yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Webhook Verification - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Webhook Verification Helper</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p>Source: <strong>{{ source.name }}</strong></p>
+        <p><a href="{{ url_for('datasources.source_settings', source_id=source.id) }}">Back to source settings</a></p>
+
+        <form method="post" class="form-card">
+            <label>Payload format</label>
+            <select name="payload_format">
+                <option value="generic" {% if payload_format == "generic" %}selected{% endif %}>Generic JSON</option>
+                <option value="slack" {% if payload_format == "slack" %}selected{% endif %}>Slack</option>
+                <option value="teams" {% if payload_format == "teams" %}selected{% endif %}>Microsoft Teams</option>
+            </select>
+
+            <label>Health status</label>
+            <select name="health_status">
+                <option value="unhealthy" {% if health_status == "unhealthy" %}selected{% endif %}>Unhealthy</option>
+                <option value="degraded" {% if health_status == "degraded" %}selected{% endif %}>Degraded</option>
+            </select>
+
+            <label>Error message</label>
+            <input type="text" name="error_message" value="{{ error_message }}">
+
+            <button class="btn btn-primary" type="submit">Regenerate Sample</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Payload Sample</h3>
+        <pre>{{ payload_json }}</pre>
+
+        <h3>Headers to Verify</h3>
+        {% if has_signing_secret %}
+            <p><strong>Content-Type:</strong> application/json</p>
+            {% for key, value in signature_headers.items() %}
+                <p><strong>{{ key }}:</strong> {{ value }}</p>
+            {% endfor %}
+            <p>Signature header name configured on source: <strong>{{ signature_header }}</strong></p>
+        {% else %}
+            <p>No signing secret configured. Add a webhook signing secret in source settings to generate signed samples.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h3>Python Verification Snippet</h3>
+<pre>import hashlib
+import hmac
+
+def verify_signature(headers, body_text, signing_secret):
+    ts = headers.get("X-CoachingOS-Timestamp", "")
+    signature = headers.get("{{ signature_header }}", "")
+    if not ts or not signature.startswith("sha256="):
+        return False
+    expected = hmac.new(
+        signing_secret.encode("utf-8"),
+        f"{ts}.{body_text}".encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, f"sha256={expected}")
+</pre>
+
+        <h3>Node.js Verification Snippet</h3>
+<pre>const crypto = require("crypto");
+
+function verifySignature(headers, bodyText, signingSecret) {
+  const ts = headers["x-coachingos-timestamp"] || "";
+  const signature = headers["{{ signature_header|lower }}"] || "";
+  if (!ts || !signature.startsWith("sha256=")) return false;
+
+  const expected = crypto
+    .createHmac("sha256", signingSecret)
+    .update(`${ts}.${bodyText}`, "utf8")
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, "utf8"),
+    Buffer.from(`sha256=${expected}`, "utf8")
+  );
+}
+</pre>
+    </article>
+</section>
+{% endblock %}

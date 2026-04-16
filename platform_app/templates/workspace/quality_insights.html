@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Quality Insights - CoachingOS{% endblock %}
+{% block page_eyebrow %}Coaching Ops{% endblock %}
+{% block page_title %}Quality Insights{% endblock %}
+{% block content %}
+<section class="ops-filter-bar">
+    <a class="{{ 'is-active' if status_filter == 'all' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='all') }}">All</a>
+    <a class="{{ 'is-active' if status_filter == 'critical_drop' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='critical_drop') }}">Critical</a>
+    <a class="{{ 'is-active' if status_filter == 'declining' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='declining') }}">Declining</a>
+    <a class="{{ 'is-active' if status_filter == 'watch' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='watch') }}">Watch</a>
+    <a class="{{ 'is-active' if status_filter == 'stable' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='stable') }}">Stable</a>
+    <a class="{{ 'is-active' if status_filter == 'improving' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug, status='improving') }}">Improving</a>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <div class="metric"><span class="metric-label">Critical</span><span class="metric-value">{{ summary.critical_drop }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">Declining</span><span class="metric-value">{{ summary.declining }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">Watch</span><span class="metric-value">{{ summary.watch }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">Improving</span><span class="metric-value">{{ summary.improving }}</span></div>
+    </article>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>At-risk members</h2>
+            <p class="muted">Trend signals that should feed the coaching workflow backlog.</p>
+        </div>
+    </div>
+    {% if risk_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Team</th><th>Recent Avg</th><th>Baseline Avg</th><th>Delta</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for row in risk_rows %}
+                    <tr>
+                        <td>{{ row.agent.full_name }}</td>
+                        <td>{{ row.agent.team.name if row.agent.team else "-" }}</td>
+                        <td>{{ row.recent_avg if row.recent_avg is not none else "-" }}</td>
+                        <td>{{ row.baseline_avg if row.baseline_avg is not none else "-" }}</td>
+                        <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
+                        <td>{{ row.risk_status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No members found for this filter.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>Team trend ranking</h2>
+            <p class="muted">Executive ranking for scoped drill-down.</p>
+        </div>
+    </div>
+    {% if team_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Team</th><th>Recent Avg</th><th>Scored Sessions</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for row in team_rows %}
+                    <tr>
+                        <td>{{ row.team.name }}</td>
+                        <td>{{ row.recent_avg if row.recent_avg is not none else "-" }}</td>
+                        <td>{{ row.session_count }}</td>
+                        <td><a href="{{ url_for('workspace.team_dashboard', team_id=row.team.id) }}">Open team</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No team trend data yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

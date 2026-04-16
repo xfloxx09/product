@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Pricing - CoachingOS{% endblock %}
+{% block content %}
+<section>
+    <h1>Pricing</h1>
+    <p>Built to scale from 20 seats to global enterprise deployments.</p>
+    <div class="grid">
+        {% for plan in plans %}
+            <article class="card">
+                <h3>{{ plan.name }}</h3>
+                <p class="price">{{ plan.price }} / month</p>
+                <p>Active members: {{ plan.limits.active_members if plan.limits.active_members is not none else "Unlimited" }}</p>
+                <p>
+                    Connectors:
+                    {% if plan.features.source_api or plan.features.source_sftp %}
+                        CSV + API + SFTP
+                    {% else %}
+                        CSV only
+                    {% endif %}
+                </p>
+                <a class="btn btn-primary" href="{{ url_for('onboarding.start') }}">Start {{ plan.name }}</a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Data Source Settings - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Data Source Settings</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p>Source: <strong>{{ source.name }}</strong> ({{ source.source_type }})</p>
+        <p>
+            Last connection test:
+            {% if source.last_connection_tested_at %}
+                {{ source.last_connection_tested_at }} ({{ source.last_connection_status or "unknown" }})
+            {% else %}
+                -
+            {% endif %}
+        </p>
+        <p>Health status: {{ source.health_status }}{% if source.connection_failure_count %} (failures: {{ source.connection_failure_count }}){% endif %}</p>
+        <p>
+            Last health alert:
+            {% if source.last_health_alerted_at %}
+                {{ source.last_health_alerted_at }} ({{ source.last_health_alert_status or "-" }})
+            {% else %}
+                -
+            {% endif %}
+        </p>
+        {% if source.last_connection_error %}
+            <p>Last connection error: {{ source.last_connection_error }}</p>
+        {% endif %}
+        <form method="post" style="margin-bottom:12px;">
+            <input type="hidden" name="action" value="test_connection">
+            <button class="btn btn-secondary" type="submit">Test Connection</button>
+        </form>
+        <form method="post" class="form-card" style="margin-bottom:12px;">
+            <input type="hidden" name="action" value="send_test_alert">
+            <label>Test alert status</label>
+            <select name="test_alert_status">
+                <option value="unhealthy" selected>Unhealthy</option>
+                <option value="degraded">Degraded</option>
+            </select>
+            <label>Test alert error text</label>
+            <input type="text" name="test_alert_error" value="Manual test alert">
+            <button class="btn btn-secondary" type="submit">Send Test Alert</button>
+        </form>
+        <p>
+            Need receiver-side validation help?
+            <a href="{{ url_for('datasources.webhook_verification', source_id=source.id) }}">Open Webhook Verification Helper</a>
+        </p>
+        <p>
+            Need pre-dispatch policy preview?
+            <a href="{{ url_for('datasources.alert_policy_simulator', source_id=source.id) }}">Open Alert Policy Simulator</a>
+        </p>
+        <form method="post" class="form-card">
+            <input type="hidden" name="action" value="update_config">
+
+            <label>Name</label>
+            <input type="text" name="name" value="{{ source.name }}" required>
+
+            <label>Schedule</label>
+            <select name="schedule">
+                <option value="manual" {% if source.schedule == "manual" %}selected{% endif %}>Manual</option>
+                <option value="hourly" {% if source.schedule == "hourly" %}selected{% endif %}>Hourly</option>
+                <option value="daily" {% if source.schedule == "daily" %}selected{% endif %}>Daily</option>
+            </select>
+
+            <label><input type="checkbox" name="is_active" value="1" {% if source.is_active %}checked{% endif %}> Active</label>
+
+            <label>API endpoint</label>
+            <input type="text" name="endpoint_url" value="{{ config.get('endpoint_url', '') }}">
+
+            <label>API auth header</label>
+            <input type="text" name="api_auth_header" value="{{ config.get('api_auth_header', 'Authorization') }}">
+
+            <label>SFTP host</label>
+            <input type="text" name="sftp_host" value="{{ config.get('sftp_host', '') }}">
+
+            <label>SFTP port</label>
+            <input type="number" name="sftp_port" value="{{ config.get('sftp_port', 22) }}">
+
+            <label>SFTP username</label>
+            <input type="text" name="sftp_username" value="{{ config.get('sftp_username', '') }}">
+
+            <label>SFTP private key path</label>
+            <input type="text" name="sftp_private_key_path" value="{{ config.get('sftp_private_key_path', '') }}">
+
+            <label>SFTP path</label>
+            <input type="text" name="sftp_path" value="{{ config.get('sftp_path', '') }}">
+
+            <label>Timeout (seconds)</label>
+            <input type="number" name="timeout_seconds" value="{{ config.get('timeout_seconds', 20) }}">
+
+            {% set alert_policy = config.get('alert_policy', {}) %}
+            <label>Alert webhook URL</label>
+            <input type="text" name="alert_webhook_url" value="{{ config.get('alert_webhook_url', '') }}">
+
+            <label>Alert webhook auth header</label>
+            <input type="text" name="alert_webhook_auth_header" value="{{ config.get('alert_webhook_auth_header', 'Authorization') }}">
+
+            <label>Alert webhook format</label>
+            <select name="alert_webhook_format">
+                <option value="generic" {% if config.get('alert_webhook_format', 'generic') == 'generic' %}selected{% endif %}>Generic JSON</option>
+                <option value="slack" {% if config.get('alert_webhook_format') == 'slack' %}selected{% endif %}>Slack</option>
+                <option value="teams" {% if config.get('alert_webhook_format') == 'teams' %}selected{% endif %}>Microsoft Teams</option>
+            </select>
+
+            <label>Alert webhook signature header</label>
+            <input type="text" name="alert_webhook_signature_header" value="{{ config.get('alert_webhook_signature_header', 'X-CoachingOS-Signature') }}">
+
+            <label><input type="checkbox" name="alert_on_unhealthy" value="1" {% if alert_policy.get('on_unhealthy', true) %}checked{% endif %}> Alert on unhealthy</label>
+            <label><input type="checkbox" name="alert_on_degraded" value="1" {% if alert_policy.get('on_degraded', false) %}checked{% endif %}> Alert on degraded</label>
+            <label><input type="checkbox" name="alert_channel_email" value="1" {% if alert_policy.get('channel_email', true) %}checked{% endif %}> Email channel</label>
+            <label><input type="checkbox" name="alert_channel_webhook" value="1" {% if alert_policy.get('channel_webhook', false) %}checked{% endif %}> Webhook channel</label>
+            <label>Alert cooldown (minutes)</label>
+            <input type="number" name="alert_cooldown_minutes" value="{{ alert_policy.get('cooldown_minutes', 180) }}">
+
+            <button class="btn btn-primary" type="submit">Save Config</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Rotate Connector Secrets</h3>
+        <p>API token stored: <strong>{{ "Yes" if has_api else "No" }}</strong></p>
+        <p>SFTP password stored: <strong>{{ "Yes" if has_sftp else "No" }}</strong></p>
+        <p>Webhook token stored: <strong>{{ "Yes" if has_webhook_token else "No" }}</strong></p>
+        <p>Webhook signing secret stored: <strong>{{ "Yes" if has_webhook_signing_secret else "No" }}</strong></p>
+        <p>Last rotation: {{ source.last_secret_rotated_at or "-" }}</p>
+
+        <form method="post" class="form-card">
+            <input type="hidden" name="action" value="rotate_secrets">
+
+            <label>New API token</label>
+            <input type="password" name="api_token" placeholder="Leave empty to keep unchanged">
+
+            <label><input type="checkbox" name="clear_api_token" value="1"> Clear existing API token</label>
+
+            <label>New SFTP password</label>
+            <input type="password" name="sftp_password" placeholder="Leave empty to keep unchanged">
+
+            <label><input type="checkbox" name="clear_sftp_password" value="1"> Clear existing SFTP password</label>
+
+            <label>New webhook auth token</label>
+            <input type="password" name="alert_webhook_token" placeholder="Leave empty to keep unchanged">
+
+            <label><input type="checkbox" name="clear_alert_webhook_token" value="1"> Clear existing webhook token</label>
+
+            <label>New webhook signing secret</label>
+            <input type="password" name="alert_webhook_signing_secret" placeholder="Leave empty to keep unchanged">
+
+            <label><input type="checkbox" name="clear_alert_webhook_signing_secret" value="1"> Clear existing webhook signing secret</label>
+
+            <button class="btn btn-primary" type="submit">Rotate Secrets</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Recent Alert Deliveries</h3>
+        {% if alert_events %}
+            <div style="overflow:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Trigger</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            <th>Email</th>
+                            <th>Webhook</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in alert_events %}
+                            <tr>
+                                <td>{{ event.created_at }}</td>
+                                <td>{{ event.trigger_type }}</td>
+                                <td>{{ event.health_status }}</td>
+                                <td>
+                                    {% if event.delivery_attempted %}
+                                        {% if event.delivery_failed %}
+                                            failed
+                                        {% else %}
+                                            sent
+                                        {% endif %}
+                                    {% else %}
+                                        skipped
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    sent={{ event.sent_email }}
+                                    {% if event.email_result.get("error") %}
+                                        <br><small>{{ event.email_result.get("error") }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    sent={{ event.sent_webhook }}
+                                    {% if event.webhook_result.get("error") %}
+                                        <br><small>{{ event.webhook_result.get("error") }}</small>
+                                    {% elif event.webhook_result.get("reason") %}
+                                        <br><small>{{ event.webhook_result.get("reason") }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if event.error_message %}
+                                <tr>
+                                    <td colspan="6"><small>Source error: {{ event.error_message }}</small></td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No alert events yet for this source.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

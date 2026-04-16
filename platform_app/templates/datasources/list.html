@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Data Sources - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Data Sources</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <p><a href="{{ url_for('datasources.alert_analytics', tenant=tenant.slug) }}">Open Alert Analytics</a></p>
+        <form method="post" action="{{ url_for('datasources.run_due_sources', tenant=tenant.slug) }}" style="margin-bottom: 12px;">
+            <button class="btn btn-secondary" type="submit">Check and Run Due Sources</button>
+        </form>
+        <form method="post" action="{{ url_for('datasources.check_health', tenant=tenant.slug) }}" style="margin-bottom: 12px;">
+            <button class="btn btn-secondary" type="submit">Run Health Checks</button>
+        </form>
+        <form method="post" class="form-card">
+            <label>Name</label>
+            <input type="text" name="name" placeholder="HR Master Feed" required>
+
+            <label>Source type</label>
+            <select name="source_type">
+                <option value="csv_upload">CSV Upload</option>
+                <option value="sftp" {% if not connector_features.source_sftp %}disabled{% endif %}>
+                    SFTP (scheduled file drop){% if not connector_features.source_sftp %} - Growth+{% endif %}
+                </option>
+                <option value="api" {% if not connector_features.source_api %}disabled{% endif %}>
+                    API (pull/push connector){% if not connector_features.source_api %} - Growth+{% endif %}
+                </option>
+            </select>
+
+            <label>Schedule</label>
+            <select name="schedule">
+                <option value="manual">Manual</option>
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily</option>
+            </select>
+
+            <label>API endpoint (optional)</label>
+            <input type="text" name="endpoint_url" placeholder="https://...">
+
+            <label>API auth header (optional)</label>
+            <input type="text" name="api_auth_header" value="Authorization">
+
+            <label>API token (optional)</label>
+            <input type="password" name="api_token" placeholder="Bearer token or API key">
+            <small>Stored encrypted in connector secrets storage.</small>
+
+            <label>SFTP host (optional)</label>
+            <input type="text" name="sftp_host" placeholder="sftp.client.com">
+
+            <label>SFTP port</label>
+            <input type="number" name="sftp_port" value="22">
+
+            <label>SFTP username (optional)</label>
+            <input type="text" name="sftp_username" placeholder="sync_user">
+
+            <label>SFTP password (optional)</label>
+            <input type="password" name="sftp_password">
+            <small>Stored encrypted in connector secrets storage.</small>
+
+            <label>SFTP private key path (optional)</label>
+            <input type="text" name="sftp_private_key_path" placeholder="/keys/id_rsa">
+
+            <label>SFTP path (optional)</label>
+            <input type="text" name="sftp_path" placeholder="/exports/employees.csv">
+
+            <label>Connector timeout (seconds)</label>
+            <input type="number" name="timeout_seconds" value="20">
+
+            <label>Alert webhook URL (optional)</label>
+            <input type="text" name="alert_webhook_url" placeholder="https://hooks.example.com/...">
+
+            <label>Alert webhook auth header</label>
+            <input type="text" name="alert_webhook_auth_header" value="Authorization">
+
+            <label>Alert webhook format</label>
+            <select name="alert_webhook_format">
+                <option value="generic" selected>Generic JSON</option>
+                <option value="slack">Slack</option>
+                <option value="teams">Microsoft Teams</option>
+            </select>
+
+            <label>Alert webhook signature header</label>
+            <input type="text" name="alert_webhook_signature_header" value="X-CoachingOS-Signature">
+
+            <label>Alert webhook auth token (optional)</label>
+            <input type="password" name="alert_webhook_token" placeholder="Stored encrypted">
+
+            <label>Alert webhook signing secret (optional)</label>
+            <input type="password" name="alert_webhook_signing_secret" placeholder="HMAC secret, stored encrypted">
+
+            <label><input type="checkbox" name="alert_on_unhealthy" value="1" checked> Alert when source becomes unhealthy</label>
+            <label><input type="checkbox" name="alert_on_degraded" value="1"> Alert when source is degraded</label>
+            <label><input type="checkbox" name="alert_channel_email" value="1" checked> Use email alerts</label>
+            <label><input type="checkbox" name="alert_channel_webhook" value="1"> Use webhook alerts</label>
+            <label>Alert cooldown (minutes)</label>
+            <input type="number" name="alert_cooldown_minutes" value="180">
+
+            <button class="btn btn-primary" type="submit">Create Data Source</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Configured sources</h3>
+        {% if sources %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Name</th><th>Type</th><th>Schedule</th><th>Next run</th><th>Last sync</th><th>Conn Test</th><th>Health</th><th>Secrets</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for source in sources %}
+                        <tr>
+                            <td>{{ source.name }}</td>
+                            <td>{{ source.source_type }}</td>
+                            <td>{{ source.schedule }}</td>
+                            <td>
+                                {% if source.id in due_source_ids %}
+                                    Due now
+                                {% else %}
+                                    {{ source_next_runs.get(source.id) or "-" }}
+                                {% endif %}
+                            </td>
+                            <td>{{ source.last_synced_at or "-" }}</td>
+                            <td>
+                                {% if source.last_connection_tested_at %}
+                                    {{ source.last_connection_status or "unknown" }}<br>
+                                    <small>{{ source.last_connection_tested_at }}</small>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ source.health_status }}
+                                {% if source.connection_failure_count %}
+                                    ({{ source.connection_failure_count }})
+                                {% endif %}
+                                <br>
+                                {% if source.last_error %}
+                                    {{ source.last_error }} ({{ source.failure_count }})
+                                {% else %}
+                                    OK
+                                {% endif %}
+                                {% if source.last_health_alerted_at %}
+                                    <br><small>alert {{ source.last_health_alert_status }} at {{ source.last_health_alerted_at }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if source_has_api_token.get(source.id) %}API token{% endif %}
+                                {% if source_has_sftp_password.get(source.id) %}
+                                    {% if source_has_api_token.get(source.id) %}, {% endif %}SFTP password
+                                {% endif %}
+                                {% if not source_has_api_token.get(source.id) and not source_has_sftp_password.get(source.id) %}
+                                    -
+                                {% endif %}
+                                {% if source.last_secret_rotated_at %}
+                                    <br><small>rotated {{ source.last_secret_rotated_at }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('datasources.run_source', source_id=source.id, tenant=tenant.slug) }}">Run</a>
+                                |
+                                <a href="{{ url_for('datasources.source_settings', source_id=source.id, tenant=tenant.slug) }}">Settings</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No data sources yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="card">
+    <h3>Recent sync jobs</h3>
+    {% if recent_jobs %}
+        <table class="table-like">
+            <thead>
+                <tr><th>ID</th><th>Source</th><th>Status</th><th>Rows</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for job in recent_jobs %}
+                    <tr>
+                        <td>{{ job.id }}</td>
+                        <td>{{ job.data_source.name }}</td>
+                        <td>{{ job.status }}</td>
+                        <td>{{ job.success_rows }}/{{ job.total_rows }}</td>
+                        <td><a href="{{ url_for('datasources.job_detail', job_id=job.id, tenant=tenant.slug) }}">Details</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No sync jobs yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

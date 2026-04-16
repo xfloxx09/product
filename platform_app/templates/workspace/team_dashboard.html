@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Team Dashboard - CoachingOS{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>{{ team.name }} - Team Dashboard</h1>
+    <p>Workspace: {{ tenant.slug }}</p>
+    <p><a href="{{ url_for('workspace.dashboard') }}">Back to workspace dashboard</a></p>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <h3>Active Members</h3>
+        <p>{{ active_agents|length }}</p>
+    </article>
+    <article class="card">
+        <h3>Total Members</h3>
+        <p>{{ agents|length }}</p>
+    </article>
+    <article class="card">
+        <h3>Sessions</h3>
+        <p>{{ total_sessions }}</p>
+    </article>
+    <article class="card">
+        <h3>Avg Score</h3>
+        <p>{{ avg_score if avg_score is not none else "-" }}</p>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Team Members</h3>
+    {% if agents %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Name</th><th>Code</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for agent in agents %}
+                    <tr>
+                        <td>{{ agent.full_name }}</td>
+                        <td>{{ agent.employee_code }}</td>
+                        <td>{{ agent.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No team members yet.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Coaching SLA</h3>
+    {% if sla_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Cadence</th><th>Last Session</th><th>Due</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for row in sla_rows %}
+                    <tr>
+                        <td>{{ row.agent.full_name }}</td>
+                        <td>{{ row.cadence_days }} days</td>
+                        <td>{{ row.last_session_at or "-" }}</td>
+                        <td>{{ row.due_at or "-" }}</td>
+                        <td>
+                            {{ row.status }}
+                            {% if row.overdue_days %}
+                                ({{ row.overdue_days }}d)
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No SLA rows available.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Quality Trend Signals</h3>
+    {% if quality_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Recent Avg</th><th>Baseline Avg</th><th>Delta</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for row in quality_rows %}
+                    <tr>
+                        <td>{{ row.agent.full_name }}</td>
+                        <td>{{ row.recent_avg if row.recent_avg is not none else "-" }}</td>
+                        <td>{{ row.baseline_avg if row.baseline_avg is not none else "-" }}</td>
+                        <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
+                        <td>{{ row.risk_status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No quality trend signals yet.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Recent Sessions</h3>
+    {% if recent_sessions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Agent</th><th>Coach</th><th>Type</th><th>Channel</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+                {% for session in recent_sessions %}
+                    <tr>
+                        <td>{{ session.agent.full_name }}</td>
+                        <td>{{ session.coach.full_name }}</td>
+                        <td>{{ session.coaching_type }}</td>
+                        <td>{{ session.channel }}</td>
+                        <td>{{ session.score if session.score is not none else "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No sessions for this team yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

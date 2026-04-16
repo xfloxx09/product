@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Run Data Source - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Run Data Source</h1>
+    <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+    <p>Source: <strong>{{ source.name }}</strong> ({{ source.source_type }})</p>
+    <p><a href="{{ url_for('datasources.source_settings', source_id=source.id, tenant=tenant.slug) }}">Open source settings</a></p>
+    <p>Schedule: {{ source.schedule }} | Last sync: {{ source.last_synced_at or "-" }}</p>
+    {% if source.last_error %}
+        <p>Last error: {{ source.last_error }} (failures: {{ source.failure_count }})</p>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" class="form-card">
+        <label>Run mode</label>
+        <select name="run_mode">
+            <option value="dry_run" selected>Dry run (preview only)</option>
+            <option value="apply">Apply (write to database)</option>
+        </select>
+
+        {% if source.source_type == "csv_upload" %}
+            <label>CSV file</label>
+            <input type="file" name="csv_file" accept=".csv,text/csv" required>
+        {% else %}
+            <p>This connector reads configuration from the data source settings and pulls data automatically.</p>
+        {% endif %}
+
+        <button class="btn btn-primary" type="submit">Run sync</button>
+    </form>
+</section>
+{% endblock %}

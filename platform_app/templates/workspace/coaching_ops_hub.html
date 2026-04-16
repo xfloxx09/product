@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Coaching Ops - CoachingOS{% endblock %}
+{% block page_eyebrow %}Coaching Ops{% endblock %}
+{% block page_title %}Operating Hub{% endblock %}
+{% block page_actions %}
+<a class="btn btn-primary" href="#new-case">Create case</a>
+{% endblock %}
+{% block content %}
+<section class="three-up">
+    <article class="card metric">
+        <span class="metric-label">Open workflow</span>
+        <span class="metric-value">{{ case_summary.open + case_summary.planned + case_summary.in_progress + case_summary.follow_up }}</span>
+        <span class="muted">Queue, planned, active, follow-up</span>
+    </article>
+    <article class="card metric">
+        <span class="metric-label">Due soon</span>
+        <span class="metric-value">{{ case_summary.due_soon }}</span>
+        <span class="muted">{{ case_summary.overdue }} overdue</span>
+    </article>
+    <article class="card metric">
+        <span class="metric-label">Completed cases</span>
+        <span class="metric-value">{{ case_summary.completed }}</span>
+        <span class="muted">Tracked through coaching sessions</span>
+    </article>
+</section>
+
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Workflow queue</h2>
+                <p class="muted">Canonical cases replacing one-off assignment-first coaching.</p>
+            </div>
+        </div>
+        {% if case_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Case</th><th>Status</th><th>Priority</th><th>Owner</th><th>Target</th></tr>
+            </thead>
+            <tbody>
+                {% for case in case_rows %}
+                <tr>
+                    <td>
+                        <strong>{{ case.agent.full_name }}</strong><br>
+                        <span class="muted">{{ case.team.name if case.team else "Unassigned team" }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ case.title }}</strong><br>
+                        <span class="muted">{{ case.source_type|replace('_', ' ')|title }}</span>
+                    </td>
+                    <td><span class="pill">{{ case.status|replace('_', ' ')|title }}</span></td>
+                    <td>{{ case.priority|title }}</td>
+                    <td>{{ case.assignee.full_name if case.assignee else "-" }}</td>
+                    <td>{{ case.due_at.strftime("%Y-%m-%d") if case.due_at else "-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No coaching cases yet. Completed sessions will now backfill a case automatically, or you can create a planned case here.</p>
+        {% endif %}
+    </article>
+
+    <article class="card" id="new-case">
+        <div class="section-head">
+            <div>
+                <h2>Create planned case</h2>
+                <p class="muted">Use for manager-assigned, recurring, or follow-up coaching.</p>
+            </div>
+        </div>
+        <form method="post" class="stack">
+            <label>Member
+                <select name="agent_id" required>
+                    <option value="">Select member</option>
+                    {% for agent in agents %}
+                    <option value="{{ agent.id }}">{{ agent.full_name }}{% if agent.team %} - {{ agent.team.name }}{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Case title
+                <input type="text" name="title" placeholder="Example: Monthly quality review">
+            </label>
+            <label>Summary
+                <textarea name="summary" rows="4" placeholder="What triggered this case, what should the coach focus on, what outcome is expected?"></textarea>
+            </label>
+            <div class="three-up">
+                <label>Source
+                    <select name="source_type">
+                        <option value="manager_assigned">Manager assigned</option>
+                        <option value="cadence">Cadence</option>
+                        <option value="quality_risk">Quality risk</option>
+                        <option value="follow_up">Follow up</option>
+                    </select>
+                </label>
+                <label>Priority
+                    <select name="priority">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </label>
+                <label>Target date
+                    <input type="date" name="due_at">
+                </label>
+            </div>
+            <button class="btn btn-primary" type="submit">Create coaching case</button>
+        </form>
+    </article>
+</section>
+
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Completed sessions</h2>
+                <p class="muted">Execution records linked back into workflow cases.</p>
+            </div>
+            <a href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}">Open all</a>
+        </div>
+        {% if sessions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>When</th><th>Type</th><th>Score</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session.agent.full_name }}</td>
+                    <td>{{ session.occurred_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                    <td>{{ session.coaching_type|replace('_', ' ')|title }}</td>
+                    <td>{{ session.score if session.score is not none else "-" }}</td>
+                    <td><a href="{{ url_for('workspace.session_detail', session_id=session.id, tenant=tenant.slug) }}">Open</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No completed sessions yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Open follow-up actions</h2>
+                <p class="muted">Cross-case follow through for owners and managers.</p>
+            </div>
+            <a href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug) }}">Open all</a>
+        </div>
+        {% if open_actions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Action</th><th>Member</th><th>Owner</th><th>Due</th></tr>
+            </thead>
+            <tbody>
+                {% for item in open_actions %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.coaching_session.agent.full_name }}</td>
+                    <td>{{ item.owner.full_name if item.owner else "-" }}</td>
+                    <td>{{ item.due_at.strftime("%Y-%m-%d") if item.due_at else "-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No open action items right now.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>SLA board</h2>
+                <p class="muted">Members that need coaching attention next.</p>
+            </div>
+            <a href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug) }}">Open all</a>
+        </div>
+        {% if sla_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Status</th><th>Cadence</th><th>Last session</th></tr>
+            </thead>
+            <tbody>
+                {% for row in sla_rows %}
+                <tr>
+                    <td>{{ row.agent.full_name }}</td>
+                    <td>{{ row.status|replace('_', ' ')|title }}</td>
+                    <td>{{ row.cadence_days }} days</td>
+                    <td>{{ row.last_coached_at.strftime("%Y-%m-%d") if row.last_coached_at else "-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No SLA records yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Quality watchlist</h2>
+                <p class="muted">Recent trend signals to pull into coaching planning.</p>
+            </div>
+            <a href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug) }}">Open all</a>
+        </div>
+        {% if quality_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Team</th><th>Delta</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for row in quality_rows %}
+                <tr>
+                    <td>{{ row.agent.full_name }}</td>
+                    <td>{{ row.agent.team.name if row.agent.team else "-" }}</td>
+                    <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
+                    <td>{{ row.risk_status|replace('_', ' ')|title }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="muted">No quality signals yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

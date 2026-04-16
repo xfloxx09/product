@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Register Owner - CoachingOS{% endblock %}
+{% block content %}
+<section>
+    <h1>Register workspace owner</h1>
+    <form method="post" class="card form-card">
+        <label>Workspace slug</label>
+        <input type="text" name="tenant_slug" required>
+
+        <label>Full name</label>
+        <input type="text" name="full_name" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Password</label>
+        <input type="password" name="password" minlength="10" required>
+
+        <button class="btn btn-primary" type="submit">Create owner account</button>
+    </form>
+</section>
+{% endblock %}

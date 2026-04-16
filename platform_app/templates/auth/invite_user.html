@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Invite User - CoachingOS{% endblock %}
+{% block content %}
+<section class="grid">
+    <article class="card">
+        <h1>Invite user</h1>
+        <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+        <form method="post" class="form-card">
+            <label>Full name</label>
+            <input type="text" name="full_name" required>
+
+            <label>Email</label>
+            <input type="email" name="email" required>
+
+            <label>Role</label>
+            <select name="role">
+                {% for role in available_roles %}
+                    <option value="{{ role.role_key }}">{{ role.display_name }}</option>
+                {% endfor %}
+            </select>
+
+            <button class="btn btn-primary" type="submit">Create invite link</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Active invites</h3>
+        {% if active_invites %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Email</th><th>Role</th><th>Expires</th><th>Invite Link</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for invite in active_invites %}
+                        <tr>
+                            <td>{{ invite.email }}</td>
+                            <td>{{ invite.role }}</td>
+                            <td>{{ invite.expires_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                            <td class="truncate">{{ invite_links.get(invite.id) }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('auth.resend_invite', invite_id=invite.id) }}" style="display:inline">
+                                    <button class="btn btn-secondary" type="submit">Resend</button>
+                                </form>
+                                <form method="post" action="{{ url_for('auth.revoke_invite', invite_id=invite.id) }}" style="display:inline">
+                                    <button class="btn btn-secondary" type="submit">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No active invites.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

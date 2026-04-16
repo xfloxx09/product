@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Coaching SLA - CoachingOS{% endblock %}
+{% block page_eyebrow %}Coaching Ops{% endblock %}
+{% block page_title %}SLA Board{% endblock %}
+{% block content %}
+<section class="ops-filter-bar">
+    <a class="{{ 'is-active' if status_filter == 'overdue' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug, status='overdue') }}">Overdue</a>
+    <a class="{{ 'is-active' if status_filter == 'never_coached' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug, status='never_coached') }}">Never coached</a>
+    <a class="{{ 'is-active' if status_filter == 'on_track' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug, status='on_track') }}">On track</a>
+    <a class="{{ 'is-active' if status_filter == 'inactive' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug, status='inactive') }}">Inactive</a>
+    <a class="{{ 'is-active' if status_filter == 'all' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug, status='all') }}">All</a>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <div class="metric"><span class="metric-label">Overdue</span><span class="metric-value">{{ summary.overdue }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">Never coached</span><span class="metric-value">{{ summary.never_coached }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">On track</span><span class="metric-value">{{ summary.on_track }}</span></div>
+    </article>
+    <article class="card">
+        <div class="metric"><span class="metric-label">Inactive</span><span class="metric-value">{{ summary.inactive }}</span></div>
+    </article>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>Coaching coverage</h2>
+            <p class="muted">Cadence compliance across the visible workforce.</p>
+        </div>
+    </div>
+    {% if rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Team</th><th>Cadence</th><th>Last Session</th><th>Due</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.agent.full_name }}</td>
+                        <td>{{ row.agent.team.name if row.agent.team else "-" }}</td>
+                        <td>{{ row.cadence_days }} days</td>
+                        <td>{{ row.last_session_at or "-" }}</td>
+                        <td>{{ row.due_at or "-" }}</td>
+                        <td>
+                            {{ row.status }}
+                            {% if row.overdue_days %}
+                                ({{ row.overdue_days }}d)
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No members found for this filter.</p>
+    {% endif %}
+</section>
+{% endblock %}

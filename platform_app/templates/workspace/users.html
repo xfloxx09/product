@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Users - CoachingOS{% endblock %}
+{% block page_eyebrow %}Governance{% endblock %}
+{% block page_title %}Users and Access{% endblock %}
+{% block content %}
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Workspace users</h2>
+                <p class="muted">Role assignment, activation, and delegated team scope governance.</p>
+            </div>
+            <div class="inline-actions">
+                <a class="btn btn-primary" href="{{ url_for('auth.invite_user') }}">Invite user</a>
+                <a href="{{ url_for('settings.role_settings') }}">Manage roles</a>
+            </div>
+        </div>
+        {% if users %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Team Scope</th><th>Controls</th></tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        {% set scoped_ids = scope_map.get(user.id, set()) %}
+                        <tr>
+                            <td>{{ user.full_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ role_labels.get(user.role, user.role) }}</td>
+                            <td>{{ "active" if user.is_active else "inactive" }}</td>
+                            <td>
+                                {% if scoped_ids %}
+                                    {% set ns = namespace(first=true) %}
+                                    {% for team in teams %}
+                                        {% if team.id in scoped_ids %}
+                                            {% if not ns.first %}, {% endif %}{{ team.name }}
+                                            {% set ns.first = false %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    All teams
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    <input type="hidden" name="action" value="change_role">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <select name="new_role" style="width:auto;">
+                                        {% for role_key, role_label in role_options %}
+                                            <option value="{{ role_key }}" {% if role_key == user.role %}selected{% endif %}>{{ role_label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-secondary" type="submit">Set role</button>
+                                </form>
+                                <form method="post" style="display:inline;">
+                                    <input type="hidden" name="action" value="toggle_active">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    {% if user.is_active %}
+                                        <input type="hidden" name="desired_active" value="0">
+                                        <button class="btn btn-secondary" type="submit">Deactivate</button>
+                                    {% else %}
+                                        <input type="hidden" name="desired_active" value="1">
+                                        <button class="btn btn-secondary" type="submit">Activate</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% if user.role != "owner" and user.id != current_user.id %}
+                            <tr>
+                                <td colspan="6">
+                                    <form method="post" style="display:inline;">
+                                        <input type="hidden" name="action" value="set_team_scope">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label style="display:inline;">Delegated teams:</label>
+                                        <select name="scope_team_ids" multiple style="min-width:240px; max-width:420px;">
+                                            {% for team in teams %}
+                                                <option value="{{ team.id }}" {% if team.id in scoped_ids %}selected{% endif %}>
+                                                    {{ team.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button class="btn btn-secondary" type="submit">Apply team scope</button>
+                                    </form>
+                                    <form method="post" style="display:inline;">
+                                        <input type="hidden" name="action" value="clear_team_scope">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button class="btn btn-secondary" type="submit">Grant all teams</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+    </article>
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Pending invites</h2>
+                <p class="muted">Outstanding governance actions that have not been accepted yet.</p>
+            </div>
+        </div>
+        {% if invites %}
+            <table class="table-like">
+                <thead>
+                    <tr><th>Email</th><th>Role</th><th>Expires</th></tr>
+                </thead>
+                <tbody>
+                    {% for invite in invites %}
+                        <tr>
+                            <td>{{ invite.email }}</td>
+                            <td>{{ role_labels.get(invite.role, invite.role) }}</td>
+                            <td>{{ invite.expires_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No pending invites.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

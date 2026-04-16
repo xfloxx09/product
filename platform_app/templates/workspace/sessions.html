@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Coaching Sessions - CoachingOS{% endblock %}
+{% block page_eyebrow %}Coaching Ops{% endblock %}
+{% block page_title %}Completed Sessions{% endblock %}
+{% block page_actions %}
+<a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}">Back to ops hub</a>
+{% endblock %}
+{% block content %}
+<section class="split-grid">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <h2>Log coaching execution</h2>
+                <p class="muted">Saving a session now automatically links it into the canonical coaching workflow.</p>
+            </div>
+        </div>
+        <form method="post" class="stack">
+            <label>Member
+                <select name="agent_id" required>
+                    {% for agent in agents %}
+                        <option value="{{ agent.id }}">{{ agent.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>Coaching type
+                <input type="text" name="coaching_type" value="quality">
+            </label>
+
+            <label>Channel
+                <select name="channel">
+                    <option value="call">Call</option>
+                    <option value="chat">Chat</option>
+                    <option value="email">Email</option>
+                </select>
+            </label>
+
+            <label>Score
+                <input type="number" name="score" min="0" max="100" step="0.1">
+            </label>
+
+            <label>Notes
+                <textarea name="notes" rows="4"></textarea>
+            </label>
+
+            <label>Action plan items
+                <textarea name="action_items" rows="4" placeholder="One follow-up item per line"></textarea>
+            </label>
+
+            <label>Action due date
+                <input type="date" name="action_due_at">
+            </label>
+
+            <button class="btn btn-primary" type="submit">Save session</button>
+        </form>
+    </article>
+
+    <article class="card metric">
+        <span class="metric-label">Recent sessions loaded</span>
+        <span class="metric-value">{{ sessions|length }}</span>
+        <span class="muted">Most recent execution records in scope.</span>
+    </article>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>Recent sessions</h2>
+            <p class="muted">Execution history, action completion, and access into follow-up detail.</p>
+        </div>
+    </div>
+    {% if sessions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Member</th><th>Coach</th><th>Type</th><th>Channel</th><th>Score</th><th>Actions</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                    {% set action_summary = session_action_summary.get(session.id, {"total": 0, "completed": 0}) %}
+                    <tr>
+                        <td>{{ session.agent.full_name }}</td>
+                        <td>{{ session.coach.full_name }}</td>
+                        <td>{{ session.coaching_type }}</td>
+                        <td>{{ session.channel }}</td>
+                        <td>{{ session.score if session.score is not none else "-" }}</td>
+                        <td>{{ action_summary.completed }}/{{ action_summary.total }}</td>
+                        <td><a href="{{ url_for('workspace.session_detail', session_id=session.id, tenant=tenant.slug) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No sessions yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

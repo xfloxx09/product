@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Workspace Setup - CoachingOS{% endblock %}
+{% block content %}
+<section>
+    <h1>Create your workspace</h1>
+    <p>Set up organization identity, owner account, and industry defaults.</p>
+
+    <form method="post" class="card form-card">
+        <label>Company name</label>
+        <input type="text" name="company_name" required>
+
+        <label>Contact email</label>
+        <input type="email" name="contact_email" required>
+
+        <label>Owner full name</label>
+        <input type="text" name="owner_name" required>
+
+        <label>Owner login email</label>
+        <input type="email" name="owner_email" required>
+
+        <label>Owner password</label>
+        <input type="password" name="owner_password" minlength="10" required>
+
+        <label>Workspace slug</label>
+        <input type="text" name="slug" placeholder="your-company">
+
+        <label>Industry profile</label>
+        <select name="industry">
+            <option value="telecom">Telecommunications</option>
+            <option value="energy">Energy (Gas/Electricity)</option>
+            <option value="generic">Generic Contact Center</option>
+        </select>
+
+        <label>Plan</label>
+        <select name="plan">
+            {% for plan in plans %}
+                <option value="{{ plan.id }}">{{ plan.name }} ({{ plan.price }})</option>
+            {% endfor %}
+        </select>
+
+        <button class="btn btn-primary" type="submit">Create workspace + owner</button>
+    </form>
+</section>
+{% endblock %}

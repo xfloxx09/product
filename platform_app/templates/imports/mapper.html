@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}CSV Mapper - CoachingOS{% endblock %}
+{% block content %}
+<section>
+    <h1>CSV import mapper</h1>
+    <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+    <p>Define how customer columns map to product fields.</p>
+    <p><a class="btn btn-primary" href="{{ url_for('imports.new_job', tenant=tenant.slug) }}">Run Import Job</a></p>
+    <div class="card">
+        <table class="table-like">
+            <thead>
+                <tr><th>Platform field</th><th>Accepted source columns</th></tr>
+            </thead>
+            <tbody>
+                {% for field in expected_fields %}
+                    <tr>
+                        <td>{{ field }}</td>
+                        <td>
+                            {% if mapping.get(field) %}
+                                {{ mapping.get(field) | join(", ") }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

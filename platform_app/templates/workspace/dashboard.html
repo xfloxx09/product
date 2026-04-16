@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Workspace Dashboard - CoachingOS{% endblock %}
+{% block content %}
+<section class="hero">
+    <h1>{{ tenant.name }} - Coaching Operations</h1>
+    <p>Industry: {{ tenant.industry }} | Plan: {{ plan_definition.name }}</p>
+    {% if scoped_team_ids is not none %}
+        <p>View scope: delegated teams only</p>
+    {% else %}
+        <p>View scope: enterprise-wide</p>
+    {% endif %}
+</section>
+
+<section class="grid">
+    <article class="card">
+        <h3>Teams</h3>
+        <p>{{ team_count }}</p>
+    </article>
+    <article class="card">
+        <h3>Agents</h3>
+        <p>{{ total_agents }}</p>
+    </article>
+    <article class="card">
+        <h3>Sessions</h3>
+        <p>{{ total_sessions }}</p>
+    </article>
+    <article class="card">
+        <h3>Avg Score</h3>
+        <p>{{ avg_score if avg_score is not none else "-" }}</p>
+    </article>
+    <article class="card">
+        <h3>Connector Health</h3>
+        <p>Unhealthy: {{ unhealthy_sources }} | Degraded: {{ degraded_sources }}</p>
+    </article>
+    <article class="card">
+        <h3>Coaching SLA</h3>
+        <p>Overdue: {{ overdue_coaching_count }} | Never coached: {{ never_coached_count }}</p>
+        <p><a href="{{ url_for('workspace.coaching_sla_dashboard', tenant=tenant.slug) }}">Open SLA board</a></p>
+    </article>
+    <article class="card">
+        <h3>Quality Risks</h3>
+        <p>Critical: {{ critical_quality_count }} | Declining: {{ declining_quality_count }}</p>
+        <p><a href="{{ url_for('workspace.quality_insights_dashboard', tenant=tenant.slug) }}">Open quality insights</a></p>
+    </article>
+    <article class="card">
+        <h3>Plan Capacity</h3>
+        <p>
+            Active members: {{ usage.active_members }}
+            {% if active_members_limit.limit is not none %}/{{ active_members_limit.limit }}{% else %}/Unlimited{% endif %}
+        </p>
+        <p><a href="{{ url_for('billing.billing_portal') }}">Manage plan</a></p>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Team Performance</h3>
+    {% if team_performance_rows %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Team</th><th>Agents</th><th>Sessions</th><th>Avg Score</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for row in team_performance_rows %}
+                    <tr>
+                        <td>{{ row.team_name }}</td>
+                        <td>{{ row.agent_count }}</td>
+                        <td>{{ row.session_count }}</td>
+                        <td>{{ row.avg_score|round(2) if row.avg_score is not none else "-" }}</td>
+                        <td><a href="{{ url_for('workspace.team_dashboard', team_id=row.team_id) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No team performance data yet.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h3>Latest sessions</h3>
+    {% if recent_sessions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Agent</th><th>Coach</th><th>Type</th><th>Score</th><th>Team</th></tr>
+            </thead>
+            <tbody>
+                {% for session in recent_sessions %}
+                    <tr>
+                        <td>{{ session.agent.full_name }}</td>
+                        <td>{{ session.coach.full_name }}</td>
+                        <td>{{ session.coaching_type }}</td>
+                        <td>{{ session.score if session.score is not none else "-" }}</td>
+                        <td>{{ session.agent.team.name if session.agent.team else "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No sessions yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

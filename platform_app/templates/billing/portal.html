@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Billing Portal - CoachingOS{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Billing portal</h1>
+    <p>Workspace: <strong>{{ tenant.slug }}</strong></p>
+    <p>Current plan: <strong>{{ plan_definition.name }}</strong> ({{ plan_definition.price }})</p>
+    <p>
+        Active members included:
+        {{ plan_definition.limits.active_members if plan_definition.limits.active_members is not none else "Unlimited" }}.
+    </p>
+    <p>
+        Feature unlocks:
+        CSV {% if plan_definition.features.source_csv_upload %}enabled{% else %}disabled{% endif %},
+        API {% if plan_definition.features.source_api %}enabled{% else %}disabled{% endif %},
+        SFTP {% if plan_definition.features.source_sftp %}enabled{% else %}disabled{% endif %}.
+    </p>
+    {% if subscription %}
+        <table class="table-like">
+            <tbody>
+                <tr><th>Status</th><td>{{ subscription.status }}</td></tr>
+                <tr><th>Provider</th><td>{{ subscription.provider }}</td></tr>
+                <tr><th>Customer ID</th><td>{{ subscription.provider_customer_id or "-" }}</td></tr>
+                <tr><th>Subscription ID</th><td>{{ subscription.provider_subscription_id or "-" }}</td></tr>
+                <tr><th>Current period end</th><td>{{ subscription.current_period_end or "-" }}</td></tr>
+            </tbody>
+        </table>
+        <form method="post" action="{{ url_for('billing.portal_session') }}" style="margin-top:12px;">
+            <button class="btn btn-primary" type="submit">Open Stripe Billing Portal</button>
+        </form>
+    {% else %}
+        <p>No subscription record found.</p>
+    {% endif %}
+</section>
+{% endblock %}

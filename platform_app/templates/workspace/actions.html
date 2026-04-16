@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Action Dashboard - CoachingOS{% endblock %}
+{% block page_eyebrow %}Coaching Ops{% endblock %}
+{% block page_title %}Follow-Up Actions{% endblock %}
+{% block content %}
+<section class="ops-filter-bar">
+    <a class="{{ 'is-active' if status_filter == 'open' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug, status='open') }}">Open</a>
+    <a class="{{ 'is-active' if status_filter == 'overdue' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug, status='overdue') }}">Overdue</a>
+    <a class="{{ 'is-active' if status_filter == 'completed' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug, status='completed') }}">Completed</a>
+    <a class="{{ 'is-active' if status_filter == 'all' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug, status='all') }}">All</a>
+</section>
+
+<section class="three-up">
+    <article class="card">
+        <div class="metric">
+            <span class="metric-label">Open actions</span>
+            <span class="metric-value">{{ open_count }}</span>
+        </div>
+    </article>
+    <article class="card">
+        <div class="metric">
+            <span class="metric-label">Overdue actions</span>
+            <span class="metric-value">{{ overdue_count }}</span>
+        </div>
+    </article>
+    <article class="card">
+        <div class="metric">
+            <span class="metric-label">Completed actions</span>
+            <span class="metric-value">{{ completed_count }}</span>
+        </div>
+    </article>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>Action queue</h2>
+            <p class="muted">Operational follow-through across all coaching workflows.</p>
+        </div>
+    </div>
+    {% if actions %}
+        <table class="table-like">
+            <thead>
+                <tr><th>Action</th><th>Agent</th><th>Owner</th><th>Status</th><th>Due</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for item in actions %}
+                    <tr>
+                        <td>{{ item.title }}</td>
+                        <td>{{ item.coaching_session.agent.full_name }}</td>
+                        <td>{{ item.owner.full_name if item.owner else "-" }}</td>
+                        <td>{{ item.status }}</td>
+                        <td>{{ item.due_at or "-" }}</td>
+                        <td><a href="{{ url_for('workspace.session_detail', session_id=item.coaching_session_id, tenant=tenant.slug) }}">Open session</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No action items for this filter.</p>
+    {% endif %}
+</section>
+{% endblock %}
