@@ -1,0 +1,664 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+    .form-section {
+        background-color: #2b2b2b;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #444;
+    }
+    .section-title {
+        color: #e20074;
+        border-bottom: 2px solid #e20074;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 1.3rem;
+    }
+    .section-title i {
+        margin-right: 10px;
+    }
+    .rating-slider {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .rating-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e20074;
+        text-align: center;
+        margin-top: 5px;
+    }
+    .rating-value span {
+        font-size: 1rem;
+        color: #aaa;
+    }
+    .leitfaden-item {
+        background-color: #333;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .leitfaden-label {
+        font-weight: 500;
+        color: #ddd;
+        margin-bottom: 0;
+    }
+    .leitfaden-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    .leitfaden-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .leitfaden-btn.ja {
+        background-color: #28a745;
+        color: white;
+    }
+    .leitfaden-btn.ja.active {
+        background-color: #1e7e34;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 15px #28a745;
+        transform: scale(1.15);
+        border: 2px solid white;
+    }
+    .leitfaden-btn.nein {
+        background-color: #dc3545;
+        color: white;
+    }
+    .leitfaden-btn.nein.active {
+        background-color: #bd2130;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 15px #dc3545;
+        transform: scale(1.15);
+        border: 2px solid white;
+    }
+    .leitfaden-btn.ka {
+        background-color: #6c757d;
+        color: white;
+    }
+    .leitfaden-btn.ka.active {
+        background-color: #545b62;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 15px #6c757d;
+        transform: scale(1.15);
+        border: 2px solid white;
+    }
+    .leitfaden-btn:hover {
+        transform: scale(1.1);
+    }
+    .leitfaden-select {
+        display: none;
+    }
+    input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
+        border-radius: 5px;
+        outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        background: #e20074;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid white;
+    }
+    input[type=range]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        background: #e20074;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid white;
+    }
+    .time-spent-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .time-spent-wrapper input {
+        flex: 1;
+    }
+    .time-spent-unit {
+        font-size: 1.1rem;
+        color: #aaa;
+        min-width: 60px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">{{ title }}</h2>
+
+    {% if not is_edit_mode|default(false) and show_coaching_project_picker|default(false) %}
+    <form method="get" action="{{ url_for('main.add_coaching') }}" class="form-section form-inline align-items-end mb-3 flex-wrap">
+        {% if request.args.get('assigned_id') %}
+        <input type="hidden" name="assigned_id" value="{{ request.args.get('assigned_id') }}">
+        {% endif %}
+        {% if request.args.get('planned_id') %}
+        <input type="hidden" name="planned_id" value="{{ request.args.get('planned_id') }}">
+        {% endif %}
+        <div class="form-group mr-3 mb-2 mb-md-0">
+            <label for="pick_coaching_project" class="mr-2 font-weight-bold">Projekt</label>
+            <select name="project" id="pick_coaching_project" class="form-control" onchange="this.form.submit()">
+                {% for p in coaching_projects %}
+                <option value="{{ p.id }}" {% if p.id == selected_coaching_project_id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <small class="text-muted">Die Teammitglied-Auswahl gilt für dieses Projekt.</small>
+    </form>
+    {% endif %}
+
+    <form id="coachingEinzelForm" method="POST" action="{% if is_edit_mode %}{{ url_for('main.edit_coaching', coaching_id=coaching.id, next=request.args.get('next')) }}{% else %}{{ url_for('main.add_coaching') }}{% endif %}" novalidate>
+        {{ form.hidden_tag() }}
+        {% if not is_edit_mode|default(false) and selected_coaching_project_id is defined %}
+        <input type="hidden" name="project_id" value="{{ selected_coaching_project_id }}">
+        {% endif %}
+        <input type="hidden" name="fulfill_planned_id" id="fulfill_planned_id" value="{{ initial_fulfill_planned_id or '' }}">
+
+        <!-- Abschnitt 1: Teammitglied & Coaching-Art -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-user"></i> Teammitglied & Coaching-Art</h4>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    {{ form.team_member_id.label(class="form-control-label") }}
+                    <select name="team_member_id" id="team_member_id" class="form-control custom-select" required>
+                        <option value="">-- Bitte wählen --</option>
+                        {% set grouped_choices = {} %}
+                        {% for value, label in form.team_member_id.choices %}
+                            {% set team_name = label.split('(')[-1].rstrip(')') if '(' in label else '' %}
+                            {% set member_name = label.split(' (')[0] %}
+                            {% if team_name not in grouped_choices %}
+                                {% set _ = grouped_choices.update({team_name: []}) %}
+                            {% endif %}
+                            {% set _ = grouped_choices[team_name].append((value, member_name)) %}
+                        {% endfor %}
+                        {% for team_name, members in grouped_choices.items() %}
+                            <optgroup label="{{ team_name }}">
+                                {% for value, member_name in members %}
+                                    <option value="{{ value }}" {% if form.team_member_id.data == value %}selected{% endif %}>{{ member_name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    </select>
+                    {% if form.team_member_id.errors %}
+                        <div class="invalid-feedback d-block">{% for error in form.team_member_id.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-4">
+                    {{ form.coaching_style.label(class="form-control-label") }}
+                    {{ form.coaching_style(class="form-control custom-select " + ("is-invalid" if form.coaching_style.errors else "")) }}
+                    {% if form.coaching_style.errors %}
+                        <div class="invalid-feedback">{% for error in form.coaching_style.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-4">
+                    {{ form.coaching_subject.label(class="form-control-label") }}
+                    {{ form.coaching_subject(class="form-control custom-select " + ("is-invalid" if form.coaching_subject.errors else "")) }}
+                    {% if form.coaching_subject.errors %}
+                        <div class="invalid-feedback">{% for error in form.coaching_subject.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group" id="tcap_id_field" {% if not (form.coaching_style.data == 'TCAP' or (coaching and coaching.coaching_style == 'TCAP')) %}style="display: none;"{% endif %}>
+                {{ form.tcap_id.label(class="form-control-label") }}
+                {{ form.tcap_id(class="form-control " + ("is-invalid" if form.tcap_id.errors else "")) }}
+                {% if form.tcap_id.errors %}
+                    <div class="invalid-feedback">{% for error in form.tcap_id.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Abschnitt 2: nur sichtbar, wenn es passende zugewiesene Aufgaben gibt (oder Bearbeitung mit Verknüpfung) -->
+        <div class="form-section" id="assignedCoachingSection" style="display: none;">
+            <h4 class="section-title"><i class="fas fa-tasks"></i> Zugewiesene Aufgabe (optional)</h4>
+            <div class="form-group">
+                {{ form.assigned_coaching_id.label(class="form-control-label") }}
+                {{ form.assigned_coaching_id(class="form-control custom-select") }}
+                <small class="form-text text-muted">Wenn Sie eine zugewiesene Aufgabe erfüllen, wählen Sie diese hier aus. Der Fortschritt wird automatisch aktualisiert.</small>
+            </div>
+        </div>
+
+        <div class="form-section" id="plannedCoachingTaskSection" style="display: none;">
+            <h4 class="section-title"><i class="fas fa-calendar-check"></i> Geplantes Folgecoaching</h4>
+            <p class="text-muted small mb-2">Optional: Dieses Coaching als Erfüllung eines geplanten Termins speichern (nur ab dem geplanten Kalendertag).</p>
+            <div id="plannedCoachingRadioWrap"></div>
+            <div id="plannedVerabredungWrap" class="mt-3 p-3 border border-secondary rounded" style="display: none;">
+                <p class="small mb-2"><strong>Vereinbarung aus dem geplanten Termin</strong></p>
+                <p class="small text-muted mb-2" id="plannedVerabredungTextPreview"></p>
+                <div class="form-group mb-0">
+                    <span class="d-block small mb-1">Wurde die Vereinbarung erfüllt?</span>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="planned_verabredung_erfuellt" id="planned_verabredung_yes" value="1">
+                        <label class="form-check-label" for="planned_verabredung_yes">Erfüllt</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="planned_verabredung_erfuellt" id="planned_verabredung_no" value="0">
+                        <label class="form-check-label" for="planned_verabredung_no">Nicht erfüllt</label>
+                    </div>
+                </div>
+            </div>
+            <div id="plannedCoachingPendingWrap" class="mt-2 small text-muted"></div>
+        </div>
+
+        <!-- Abschnitt 3: Leitfaden-Checkliste -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-check-circle"></i> Leitfaden-Checkliste</h4>
+            <p class="text-muted mb-3">Klicken Sie auf die entsprechenden Icons, um den Status festzulegen.</p>
+
+            {% if not leitfaden_items %}
+                <div class="alert alert-warning mb-0">Keine aktiven Leitfaden-Punkte vorhanden. Ein Admin kann diese unter <strong>Admin → Coaching-Bogen verwalten</strong> (Tab Leitfaden) anlegen.</div>
+            {% endif %}
+            {% for item in leitfaden_items %}
+                {% set current_value = selected_leitfaden_values.get(item.id, 'k.A.') %}
+                <div class="leitfaden-item">
+                    <span class="leitfaden-label">{{ item.name }}</span>
+                    <div class="leitfaden-buttons">
+                        <button type="button" class="leitfaden-btn ja" data-field="leitfaden_item_{{ item.id }}" data-value="Ja" title="Ja"><i class="fas fa-check"></i></button>
+                        <button type="button" class="leitfaden-btn nein" data-field="leitfaden_item_{{ item.id }}" data-value="Nein" title="Nein"><i class="fas fa-times"></i></button>
+                        <button type="button" class="leitfaden-btn ka" data-field="leitfaden_item_{{ item.id }}" data-value="k.A." title="k.A."><i class="fas fa-question"></i></button>
+                    </div>
+                    <select class="leitfaden-select" id="leitfaden_item_{{ item.id }}" name="leitfaden_item_{{ item.id }}">
+                        <option value="Ja" {% if current_value == 'Ja' %}selected{% endif %}>Ja</option>
+                        <option value="Nein" {% if current_value == 'Nein' %}selected{% endif %}>Nein</option>
+                        <option value="k.A." {% if current_value == 'k.A.' %}selected{% endif %}>k.A.</option>
+                    </select>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Abschnitt 4: Bewertung & Zeitaufwand -->
+        {% if bogen_layout.show_performance_bar or bogen_layout.show_time_spent %}
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-star"></i> Bewertung &amp; Zeitaufwand</h4>
+            <div class="form-row">
+                {% if bogen_layout.show_performance_bar %}
+                <div class="form-group col-md-6">
+                    {{ form.performance_mark.label(class="form-control-label") }}
+                    <input type="range" id="performance_slider" class="rating-slider" min="0" max="10" step="1" value="{{ form.performance_mark.data if form.performance_mark.data is not none else (coaching.performance_mark if is_edit_mode|default(false) and coaching else 5) }}">
+                    <div class="rating-value"><span id="performance_display">{{ form.performance_mark.data if form.performance_mark.data is not none else (coaching.performance_mark if is_edit_mode|default(false) and coaching else 5) }}</span> / 10</div>
+                    {{ form.performance_mark(class="form-control d-none", id="performance_mark_hidden") }}
+                    {% if form.performance_mark.errors %}
+                        <div class="invalid-feedback d-block">{% for error in form.performance_mark.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <input type="hidden" name="performance_mark" id="performance_mark_hidden" value="{{ form.performance_mark.data if form.performance_mark.data is not none else (coaching.performance_mark if is_edit_mode|default(false) and coaching else 5) }}">
+                {% endif %}
+                {% if bogen_layout.show_time_spent %}
+                <div class="form-group col-md-6">
+                    {{ form.time_spent.label(class="form-control-label") }}
+                    <div class="time-spent-wrapper">
+                        {{ form.time_spent(class="form-control " + ("is-invalid" if form.time_spent.errors else ""), id="time_spent_input") }}
+                        <span class="time-spent-unit">Minuten</span>
+                    </div>
+                    {% if form.time_spent.errors %}
+                        <div class="invalid-feedback d-block">{% for error in form.time_spent.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <input type="hidden" name="time_spent" id="time_spent_input" value="{{ form.time_spent.data if form.time_spent.data else (coaching.time_spent if is_edit_mode|default(false) and coaching else 30) }}">
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <input type="hidden" name="performance_mark" value="{{ form.performance_mark.data if form.performance_mark.data is not none else (coaching.performance_mark if is_edit_mode|default(false) and coaching else 5) }}">
+        <input type="hidden" name="time_spent" value="{{ form.time_spent.data if form.time_spent.data else (coaching.time_spent if is_edit_mode|default(false) and coaching else 30) }}">
+        {% endif %}
+
+        <!-- Abschnitt 5: Notizen -->
+        {% if bogen_layout.show_coach_notes %}
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-pen"></i> Notizen</h4>
+            <div class="form-group">
+                {{ form.coach_notes.label(class="form-control-label") }}
+                {{ form.coach_notes(class="form-control " + ("is-invalid" if form.coach_notes.errors else ""), rows=5, placeholder="Hier können Sie weitere Anmerkungen zum Coaching festhalten...") }}
+                {% if form.coach_notes.errors %}
+                    <div class="invalid-feedback">{% for error in form.coach_notes.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <input type="hidden" name="coach_notes" value="{{ form.coach_notes.data or '' }}">
+        {% endif %}
+
+        {% if has_perm('planned_coachings') %}
+        <div class="form-section">
+            <button type="button" class="btn btn-outline-info btn-block mb-0" data-toggle="collapse" data-target="#planNextPanel" aria-expanded="false" aria-controls="planNextPanel">
+                <i class="fas fa-calendar-plus"></i> Nächstes Coaching planen
+            </button>
+            <div class="collapse mt-3" id="planNextPanel">
+                <div class="border border-secondary rounded p-3" style="background: #333;">
+                    <div class="form-group mb-2">
+                        <label class="form-control-label text-light" for="plan_next_date">Geplanter Tag</label>
+                        <input type="date" name="plan_next_date" id="plan_next_date" class="form-control">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label class="text-light" for="plan_next_notes">Zusätzliche Notizen</label>
+                        <textarea name="plan_next_notes" id="plan_next_notes" class="form-control" rows="2" placeholder="Optional"></textarea>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="plan_next_verabredung" name="plan_next_verabredung" value="1">
+                        <label class="form-check-label" for="plan_next_verabredung">Vereinbarung fürs nächste Mal</label>
+                    </div>
+                    <div class="form-group mb-0" id="plan_next_verabredung_wrap" style="display: none;">
+                        <label class="text-light" for="plan_next_verabredung_text">Text der Vereinbarung</label>
+                        <textarea name="plan_next_verabredung_text" id="plan_next_verabredung_text" class="form-control" rows="2" placeholder="Optional"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div class="form-group text-center">
+            <button type="submit" class="btn telekom-button btn-lg px-5">
+                <i class="fas fa-save"></i> {% if is_edit_mode %}Coaching aktualisieren{% else %}Coaching speichern{% endif %}
+            </button>
+            <a href="{{ request.args.get('next') or url_for('main.index') }}" class="btn btn-secondary btn-lg ml-3 px-5">
+                <i class="fas fa-times"></i> Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+window.__coachingEditAssignedId = {% if is_edit_mode and coaching and coaching.assigned_coaching_id %}{{ coaching.assigned_coaching_id }}{% else %}null{% endif %};
+window.__coachingEditMemberId = {% if is_edit_mode and coaching %}{{ coaching.team_member_id }}{% else %}null{% endif %};
+window.__initialFulfillPlannedId = {% if initial_fulfill_planned_id %}{{ initial_fulfill_planned_id }}{% else %}null{% endif %};
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const preselectAssignedId = {{ (form.assigned_coaching_id.data or 0)|int }};
+    // --- 1. TCAP-Feld umschalten ---
+    const styleSelect = document.getElementById('coaching_style');
+    const tcapField = document.getElementById('tcap_id_field');
+    const tcapInput = document.getElementById('tcap_id');
+    if (styleSelect && tcapField && tcapInput) {
+        function toggleTcap() {
+            if (styleSelect.value === 'TCAP') {
+                tcapField.style.display = '';
+                tcapInput.required = true;
+            } else {
+                tcapField.style.display = 'none';
+                tcapInput.required = false;
+                tcapInput.value = '';
+            }
+        }
+        styleSelect.addEventListener('change', toggleTcap);
+        toggleTcap();
+    }
+
+    const planVerabredungCb = document.getElementById('plan_next_verabredung');
+    const planVerabredungWrap = document.getElementById('plan_next_verabredung_wrap');
+    const planVerabredungText = document.getElementById('plan_next_verabredung_text');
+    if (planVerabredungCb && planVerabredungWrap) {
+        function togglePlanVerabredungText() {
+            const on = planVerabredungCb.checked;
+            planVerabredungWrap.style.display = on ? '' : 'none';
+            if (!on && planVerabredungText) planVerabredungText.value = '';
+        }
+        planVerabredungCb.addEventListener('change', togglePlanVerabredungText);
+        togglePlanVerabredungText();
+    }
+
+    // --- 2. Leitfaden-Icons ---
+    const leitfadenButtons = document.querySelectorAll('.leitfaden-btn');
+    leitfadenButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fieldId = this.dataset.field;
+            const value = this.dataset.value;
+            const select = document.getElementById(fieldId);
+            if (select) {
+                select.value = value;
+                const parentDiv = this.closest('.leitfaden-buttons');
+                parentDiv.querySelectorAll('.leitfaden-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                this.style.transform = 'scale(1.2)';
+                setTimeout(() => { this.style.transform = ''; }, 150);
+            }
+        });
+    });
+
+    document.querySelectorAll('.leitfaden-select').forEach(select => {
+        const fieldId = select.id;
+        const value = select.value;
+        if (value) {
+            const activeBtn = document.querySelector(`.leitfaden-btn[data-field="${fieldId}"][data-value="${value}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+    });
+
+    // --- 3. Performance-Slider ---
+    const slider = document.getElementById('performance_slider');
+    const hiddenInput = document.getElementById('performance_mark_hidden');
+    const display = document.getElementById('performance_display');
+    if (slider && hiddenInput && display) {
+        slider.addEventListener('input', function() {
+            const val = this.value;
+            hiddenInput.value = val;
+            display.textContent = val;
+        });
+        if (hiddenInput.value) {
+            slider.value = hiddenInput.value;
+            display.textContent = hiddenInput.value;
+        } else {
+            slider.value = 5;
+            hiddenInput.value = 5;
+            display.textContent = 5;
+        }
+    }
+
+    // --- 4. Zeitaufwand auf ganze Minuten ---
+    const timeInput = document.getElementById('time_spent_input');
+    if (timeInput) {
+        timeInput.addEventListener('blur', function() {
+            let val = parseInt(this.value);
+            if (isNaN(val) || val < 1) val = 1;
+            this.value = val;
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function syncPlannedCoachingPickers(data) {
+        const wrap = document.getElementById('plannedCoachingRadioWrap');
+        const pendingWrap = document.getElementById('plannedCoachingPendingWrap');
+        const section = document.getElementById('plannedCoachingTaskSection');
+        const fulfillHidden = document.getElementById('fulfill_planned_id');
+        const verWrap = document.getElementById('plannedVerabredungWrap');
+        const verPreview = document.getElementById('plannedVerabredungTextPreview');
+        if (!wrap || !section) return;
+        const plans = (data && data.plans) ? data.plans : [];
+        window.__plannedPlansById = {};
+        plans.forEach(function(p) {
+            window.__plannedPlansById[String(p.id)] = p;
+        });
+        wrap.innerHTML = '';
+        if (pendingWrap) pendingWrap.innerHTML = '';
+        if (!plans.length) {
+            section.style.display = 'none';
+            if (fulfillHidden) fulfillHidden.value = '';
+            if (verWrap) verWrap.style.display = 'none';
+            document.querySelectorAll('input[name="planned_verabredung_erfuellt"]').forEach(function(x) { x.checked = false; });
+            return;
+        }
+        section.style.display = '';
+        let html = '<div class="form-check"><input class="form-check-input" type="radio" name="fulfill_planned_pick" id="fulfill_planned_none" value=""><label class="form-check-label" for="fulfill_planned_none">Kein geplantes Coaching verknüpfen</label></div>';
+        const pendingLines = [];
+        plans.forEach(function(p) {
+            if (p.can_start) {
+                html += '<div class="form-check"><input class="form-check-input" type="radio" name="fulfill_planned_pick" id="fulfill_planned_' + p.id + '" value="' + p.id + '"><label class="form-check-label" for="fulfill_planned_' + p.id + '">Termin ' + p.date;
+                if (p.has_verabredung) html += ' <span class="badge badge-info">Vereinbarung</span>';
+                html += '</label></div>';
+            } else {
+                pendingLines.push(p.date + (p.has_verabredung ? ' (Vereinbarung)' : ''));
+            }
+        });
+        wrap.innerHTML = html;
+        if (pendingWrap && pendingLines.length) {
+            pendingWrap.innerHTML = '<p class="mb-0"><strong>Noch nicht fällig (Verknüpfung ab Kalendertag):</strong> ' + pendingLines.join('; ') + '</p>';
+        }
+
+        function updatePlannedVerabredungBlock() {
+            if (!verWrap || !verPreview) return;
+            const sel = document.querySelector('input[name="fulfill_planned_pick"]:checked');
+            const pid = sel && sel.value ? String(sel.value) : '';
+            document.querySelectorAll('input[name="planned_verabredung_erfuellt"]').forEach(function(x) { x.checked = false; });
+            if (!pid || !window.__plannedPlansById[pid]) {
+                verWrap.style.display = 'none';
+                return;
+            }
+            const pl = window.__plannedPlansById[pid];
+            if (!pl.can_start || !pl.has_verabredung) {
+                verWrap.style.display = 'none';
+                return;
+            }
+            verPreview.innerHTML = pl.verabredung_text
+                ? escapeHtml(pl.verabredung_text)
+                : '<span class="text-muted">(Kein Text hinterlegt — bitte trotzdem den Erfüllungsstatus wählen.)</span>';
+            verWrap.style.display = '';
+        }
+
+        function syncFulfillFromRadio() {
+            const sel = document.querySelector('input[name="fulfill_planned_pick"]:checked');
+            if (sel && fulfillHidden) fulfillHidden.value = sel.value || '';
+            updatePlannedVerabredungBlock();
+        }
+        document.querySelectorAll('input[name="fulfill_planned_pick"]').forEach(function(r) {
+            r.addEventListener('change', syncFulfillFromRadio);
+        });
+        const initId = window.__initialFulfillPlannedId;
+        const noneEl = document.getElementById('fulfill_planned_none');
+        if (initId) {
+            const r = document.getElementById('fulfill_planned_' + initId);
+            if (r) {
+                r.checked = true;
+                if (noneEl) noneEl.checked = false;
+            }
+        } else if (noneEl) {
+            noneEl.checked = true;
+        }
+        syncFulfillFromRadio();
+    }
+
+    function loadPlannedForMember() {
+        const sel = document.getElementById('team_member_id');
+        const memberId = sel ? sel.value : '';
+        const plannedSection = document.getElementById('plannedCoachingTaskSection');
+        if (!memberId || !plannedSection) {
+            syncPlannedCoachingPickers({ plans: [] });
+            return;
+        }
+        fetch('/api/open_planned_coachings?member_id=' + encodeURIComponent(memberId))
+            .then(function(r) { return r.json(); })
+            .then(syncPlannedCoachingPickers)
+            .catch(function() { syncPlannedCoachingPickers({ plans: [] }); });
+    }
+
+    // --- 5. Zugewiesene Aufgaben + geplante Folgetermine (Mitglied) ---
+    const memberSelect = document.getElementById('team_member_id');
+    const assignmentSelect = document.getElementById('assigned_coaching_id');
+    const assignedSection = document.getElementById('assignedCoachingSection');
+    if (memberSelect && assignmentSelect && assignedSection) {
+        function setAssignedSectionVisible(show) {
+            assignedSection.style.display = show ? '' : 'none';
+        }
+        function loadAssignments() {
+            const memberId = memberSelect.value;
+            if (!memberId) {
+                assignmentSelect.innerHTML = '<option value="0">--- Keine zugewiesene Aufgabe ---</option>';
+                setAssignedSectionVisible(false);
+                loadPlannedForMember();
+                return;
+            }
+            const ensureId = (
+                window.__coachingEditAssignedId
+                && window.__coachingEditMemberId
+                && String(memberId) === String(window.__coachingEditMemberId)
+            ) ? window.__coachingEditAssignedId : null;
+            let url = '/api/available_assignments?member_id=' + encodeURIComponent(memberId);
+            if (ensureId) {
+                url += '&ensure_assignment_ids=' + encodeURIComponent(ensureId);
+            }
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const list = (data && data.assignments) ? data.assignments : [];
+                    let options = '<option value="0">--- Keine zugewiesene Aufgabe ---</option>';
+                    list.forEach(a => {
+                        options += '<option value="' + a.id + '">Aufgabe #' + a.id + ' (Deadline: ' + a.deadline + ') – Fortschritt: ' + a.progress + '%</option>';
+                    });
+                    assignmentSelect.innerHTML = options;
+                    const pick = preselectAssignedId || 0;
+                    if (pick && assignmentSelect.querySelector('option[value="' + pick + '"]')) {
+                        assignmentSelect.value = String(pick);
+                    }
+                    const hasReal = list.length > 0;
+                    setAssignedSectionVisible(hasReal || !!ensureId);
+                    loadPlannedForMember();
+                })
+                .catch(function () {
+                    assignmentSelect.innerHTML = '<option value="0">--- Keine zugewiesene Aufgabe ---</option>';
+                    setAssignedSectionVisible(!!ensureId);
+                    loadPlannedForMember();
+                });
+        }
+        memberSelect.addEventListener('change', function() {
+            window.__initialFulfillPlannedId = null;
+            loadAssignments();
+        });
+        loadAssignments();
+    } else if (memberSelect) {
+        memberSelect.addEventListener('change', function() {
+            window.__initialFulfillPlannedId = null;
+            loadPlannedForMember();
+        });
+        loadPlannedForMember();
+    }
+
+    const coachingEinzelForm = document.getElementById('coachingEinzelForm');
+    if (coachingEinzelForm && coachingEinzelForm.action.indexOf('add-coaching') !== -1) {
+        coachingEinzelForm.addEventListener('submit', function(ev) {
+            const fid = document.getElementById('fulfill_planned_id');
+            const pid = fid && fid.value ? String(fid.value) : '';
+            if (!pid || !window.__plannedPlansById || !window.__plannedPlansById[pid]) return;
+            const pl = window.__plannedPlansById[pid];
+            if (!pl.has_verabredung) return;
+            const checked = document.querySelector('input[name="planned_verabredung_erfuellt"]:checked');
+            if (!checked) {
+                ev.preventDefault();
+                alert('Bitte wählen Sie, ob die Vereinbarung erfüllt wurde oder nicht.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

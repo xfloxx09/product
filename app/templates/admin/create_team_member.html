@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Teammitglied erstellen</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.first_name.label }} {{ form.first_name(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.last_name.label }} {{ form.last_name(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.pylon.label }} {{ form.pylon(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.plt_id.label }} {{ form.plt_id(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.ma_kennung.label }} {{ form.ma_kennung(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.dag_id.label }} {{ form.dag_id(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.team_id.label }} {{ form.team_id(class="form-control") }}
+        </div>
+        <div class="form-check">
+            {{ form.active(class="form-check-input") }}
+            {{ form.active.label(class="form-check-label") }}
+            <small class="form-text text-muted">Wenn deaktiviert, wird das Mitglied ins ARCHIV verschoben.</small>
+        </div>
+        {{ form.submit(class="btn telekom-button") }}
+        <a href="{{ url_for('admin.panel') }}" class="btn btn-secondary">Abbrechen</a>
+    </form>
+</div>
+{% endblock %}

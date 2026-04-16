@@ -1,0 +1,746 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+    /* Gleiche Grundstile wie im Coaching-Formular */
+    .form-section {
+        background-color: #2b2b2b;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #444;
+    }
+    .section-title {
+        color: #e20074;
+        border-bottom: 2px solid #e20074;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 1.3rem;
+    }
+    .section-title i {
+        margin-right: 10px;
+    }
+
+    /* Farbiger Slider (wie bei Coaching) */
+    .rating-slider {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .rating-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e20074;
+        text-align: center;
+        margin-top: 5px;
+    }
+    .rating-value span {
+        font-size: 1rem;
+        color: #aaa;
+    }
+    input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
+        border-radius: 5px;
+        outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        background: #e20074;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid white;
+    }
+    input[type=range]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        background: #e20074;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid white;
+    }
+
+    /* Zeitaufwand */
+    .time-spent-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .time-spent-wrapper input {
+        flex: 1;
+    }
+    .time-spent-unit {
+        font-size: 1.1rem;
+        color: #aaa;
+        min-width: 60px;
+    }
+
+    /* Teilnehmerauswahl als Team-gruppierte Karten mit Bewertung */
+    .team-accordion {
+        margin-bottom: 15px;
+        border: 1px solid #444;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .team-header {
+        background-color: #333;
+        padding: 12px 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid #444;
+    }
+    .team-header:hover {
+        background-color: #3a3a3a;
+    }
+    .team-header h5 {
+        margin: 0;
+        color: #fff;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+    .team-header h5 i.fa-users {
+        color: #e20074;
+    }
+    .team-chevron {
+        color: #aaa;
+        font-size: 0.85rem;
+        margin-left: 6px;
+        transition: transform 0.2s ease;
+    }
+    .team-accordion.is-open .team-chevron {
+        transform: rotate(-180deg);
+        color: #e20074;
+    }
+    .team-header .select-all {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #bbb;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+    .team-header .select-all label {
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+    }
+    /* Custom checkbox: focusable input over drawn box */
+    .workshop-check {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .workshop-check input {
+        position: absolute;
+        opacity: 0;
+        width: 28px;
+        height: 28px;
+        margin: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+    .workshop-check .workshop-check-visual {
+        width: 26px;
+        height: 26px;
+        border: 2px solid #6c757d;
+        border-radius: 6px;
+        background: #1e1e1e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+        pointer-events: none;
+    }
+    .workshop-check input:hover + .workshop-check-visual {
+        border-color: #e20074;
+        box-shadow: 0 0 0 2px rgba(226, 0, 116, 0.2);
+    }
+    .workshop-check input:focus + .workshop-check-visual {
+        border-color: #e20074;
+        box-shadow: 0 0 0 3px rgba(226, 0, 116, 0.35);
+    }
+    .workshop-check input:checked + .workshop-check-visual {
+        background: #e20074;
+        border-color: #e20074;
+    }
+    .workshop-check input:checked + .workshop-check-visual::after {
+        content: '';
+        width: 6px;
+        height: 11px;
+        border: solid #fff;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+        margin-bottom: 3px;
+    }
+    .workshop-check-header .workshop-check-visual {
+        width: 24px;
+        height: 24px;
+    }
+    .workshop-check-header input {
+        width: 24px;
+        height: 24px;
+    }
+    .team-members {
+        padding: 10px 15px;
+        background-color: #2b2b2b;
+        display: none;
+    }
+    .team-members.expanded {
+        display: block;
+    }
+    .member-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        margin: 4px 0;
+        border-radius: 6px;
+        background-color: #333;
+        transition: background-color 0.2s;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .member-item:hover {
+        background-color: #3d3d3d;
+    }
+    .member-item .member-name-label {
+        margin: 0;
+        color: #e9e9e9;
+        cursor: pointer;
+        flex: 1;
+        min-width: 150px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .member-rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .member-rating input {
+        width: 70px;
+        background-color: #444;
+        border: 1px solid #555;
+        color: #f0f0f0;
+        border-radius: 4px;
+        padding: 5px 8px;
+        text-align: center;
+    }
+    .member-rating input:focus {
+        border-color: #e20074;
+        outline: none;
+    }
+    .member-rating span {
+        color: #aaa;
+        font-size: 0.9rem;
+    }
+    .member-count-badge {
+        background-color: #e20074;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 10px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+
+    /* Suchfeld */
+    .member-search {
+        margin-bottom: 20px;
+    }
+    .member-search input {
+        background-color: #333;
+        border: 1px solid #555;
+        color: #f0f0f0;
+        padding: 10px 15px;
+        border-radius: 30px;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    .member-search input:focus {
+        border-color: #e20074;
+        box-shadow: 0 0 0 0.2rem rgba(226, 0, 116, 0.25);
+        outline: none;
+    }
+    .member-search i {
+        position: absolute;
+        right: 20px;
+        top: 12px;
+        color: #aaa;
+    }
+
+    /* Ausgewählte Teilnehmer (Chips zwischen Suche und Teams) */
+    .selected-participants-panel {
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        background-color: #25292e;
+        border: 1px solid #444;
+        border-radius: 8px;
+    }
+    .selected-participants-panel .selected-participants-heading {
+        font-size: 0.85rem;
+        color: #adb5bd;
+        margin-bottom: 8px;
+    }
+    .selected-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        align-items: center;
+        min-height: 32px;
+    }
+    .selected-chips-empty {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+    .participant-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px 6px 12px;
+        background-color: #3a3f46;
+        border: 1px solid #555;
+        border-radius: 20px;
+        color: #f0f0f0;
+        font-size: 0.9rem;
+        max-width: 100%;
+    }
+    .participant-chip-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 220px;
+    }
+    .participant-chip-remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        margin: 0;
+        border: none;
+        border-radius: 50%;
+        background: rgba(226, 0, 116, 0.25);
+        color: #ff6bb3;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s, color 0.15s;
+    }
+    .participant-chip-remove:hover {
+        background: #e20074;
+        color: #fff;
+    }
+    .participant-chip-remove:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(226, 0, 116, 0.45);
+    }
+
+    /* Ursprüngliches Select-Feld ausblenden */
+    #team_member_ids {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">{{ title }}</h2>
+
+    {% if planned_workshop_fulfill and not is_edit_mode|default(false) %}
+    <div class="alert alert-secondary border-info mb-3">
+        <i class="fas fa-calendar-check text-info"></i>
+        <strong>Geplanter Workshop</strong> —
+        Termin {{ planned_workshop_fulfill.planned_for_date.strftime('%d.%m.%Y') }}.
+        Titel/Notizen wurden übernommen. Nach dem Speichern wird die Planung als erfüllt markiert.
+    </div>
+    {% endif %}
+
+    {% if not is_edit_mode|default(false) and show_workshop_project_picker|default(false) %}
+    <form method="get" action="{{ url_for('main.add_workshop') }}" class="form-section form-inline align-items-end mb-3 flex-wrap">
+        {% if planned_workshop_fulfill %}
+        <input type="hidden" name="planned_workshop" value="{{ planned_workshop_fulfill.id }}">
+        {% endif %}
+        <div class="form-group mr-3 mb-2 mb-md-0">
+            <label for="pick_workshop_project" class="mr-2 font-weight-bold">Projekt</label>
+            <select name="project" id="pick_workshop_project" class="form-control" onchange="this.form.submit()">
+                {% for p in workshop_projects %}
+                <option value="{{ p.id }}" {% if p.id == selected_workshop_project_id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <small class="text-muted">Teilnehmerliste folgt dem Projekt.</small>
+    </form>
+    {% endif %}
+
+    <form method="POST" action="{% if is_edit_mode %}{{ url_for('main.edit_workshop', workshop_id=workshop.id) }}{% else %}{{ url_for('main.add_workshop') }}{% endif %}" novalidate>
+        {{ form.hidden_tag() }}
+        {% if not is_edit_mode|default(false) and selected_workshop_project_id is defined %}
+        <input type="hidden" name="project_id" value="{{ selected_workshop_project_id }}">
+        {% endif %}
+        {% if planned_workshop_fulfill %}
+        <input type="hidden" name="planned_workshop_id" value="{{ planned_workshop_fulfill.id }}">
+        {% endif %}
+
+        <!-- Abschnitt 1: Workshop-Thema -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-tag"></i> Workshop-Thema</h4>
+            <div class="form-group">
+                {{ form.title.label(class="form-control-label") }}
+                {{ form.title(class="form-control " + ("is-invalid" if form.title.errors else ""), placeholder="z.B. 'Sales 101'") }}
+                {% if form.title.errors %}
+                    <div class="invalid-feedback">{% for error in form.title.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Abschnitt 2: Teilnehmerauswahl mit Bewertung -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-user-friends"></i> Teilnehmer & Bewertung</h4>
+            <p class="text-muted mb-3">Wählen Sie Teilnehmer aus. Individuelle Bewertungen (0–10) sind <strong>optional</strong>; die Gesamtbewertung unten ist verpflichtend.</p>
+
+            <div class="member-search position-relative">
+                <input type="text" id="member-filter" placeholder="Teilnehmer suchen...">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div id="selected-participants-panel" class="selected-participants-panel">
+                <div class="selected-participants-heading">
+                    Ausgewählt: <strong id="selected-count">0</strong>
+                    <span class="text-muted font-weight-normal ml-1">(× neben dem Namen entfernt die Person)</span>
+                </div>
+                <div id="selected-chips" class="selected-chips" aria-label="Liste der ausgewählten Teilnehmer"></div>
+            </div>
+
+            <div id="participant-checkboxes">
+                {% set grouped = {} %}
+                {% for value, label in form.team_member_ids.choices %}
+                    {% set member_id = value %}
+                    {% set member_name = label.split(' (')[0] %}
+                    {% set team_name = label.split('(')[1].rstrip(')') if '(' in label else '' %}
+                    {% if team_name not in grouped %}
+                        {% set _ = grouped.update({team_name: []}) %}
+                    {% endif %}
+                    {% set _ = grouped[team_name].append((member_id, member_name)) %}
+                {% endfor %}
+
+                {% for team_name, members in grouped.items() %}
+                <div class="team-accordion" data-team="{{ team_name }}">
+                    <div class="team-header">
+                        <h5><i class="fas fa-users"></i> {{ team_name }} <span class="member-count-badge">{{ members|length }}</span><i class="fas fa-chevron-down team-chevron" aria-hidden="true"></i></h5>
+                        <div class="select-all">
+                            <label class="workshop-check workshop-check-header d-inline-flex align-items-center mb-0">
+                                <input type="checkbox" class="select-all-checkbox" data-team="{{ team_name }}" id="select-all-{{ loop.index }}">
+                                <span class="workshop-check-visual" aria-hidden="true"></span>
+                            </label>
+                            <label for="select-all-{{ loop.index }}" class="mb-0">Alle auswählen</label>
+                        </div>
+                    </div>
+                    <div class="team-members">
+                        {% for member_id, member_name in members %}
+                        <div class="member-item" data-member-name="{{ member_name|lower }}" data-team="{{ team_name }}">
+                            <label class="member-name-label" for="member-{{ member_id }}">
+                                <span class="workshop-check">
+                                    <input type="checkbox" name="participant_checkbox" value="{{ member_id }}" data-team="{{ team_name }}"
+                                           data-member-name="{{ member_name }}"
+                                           id="member-{{ member_id }}"
+                                           {% if is_edit_mode and member_id in existing_participant_ids %}checked{% endif %}>
+                                    <span class="workshop-check-visual" aria-hidden="true"></span>
+                                </span>
+                                <span>{{ member_name }}</span>
+                            </label>
+                            <div class="member-rating">
+                                <input type="number" name="individual_rating_{{ member_id }}" 
+                                       min="0" max="10" step="1" 
+                                       value="{% if is_edit_mode and existing_ratings %}{{ existing_ratings.get(member_id, '') }}{% endif %}"
+                                       placeholder="optional">
+                                <span>/10 <small class="text-muted">(opt.)</small></span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Das ursprüngliche SelectMultiple-Feld (versteckt) -->
+            {{ form.team_member_ids(class="form-control", multiple=True) }}
+            {% if form.team_member_ids.errors %}
+                <div class="invalid-feedback d-block">{% for error in form.team_member_ids.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+        </div>
+
+        <!-- Abschnitt 3: Gesamtbewertung & Zeitaufwand -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-star"></i> Gesamtbewertung & Zeitaufwand</h4>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    {{ form.overall_rating.label(class="form-control-label") }}
+                    <input type="range" id="rating_slider" class="rating-slider" min="0" max="10" step="1" value="{{ form.overall_rating.data or 5 }}">
+                    <div class="rating-value"><span id="rating_display">{{ form.overall_rating.data or 5 }}</span> / 10</div>
+                    {{ form.overall_rating(class="form-control d-none", id="overall_rating_hidden") }}
+                    {% if form.overall_rating.errors %}
+                        <div class="invalid-feedback d-block">{% for error in form.overall_rating.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group col-md-6">
+                    {{ form.time_spent.label(class="form-control-label") }}
+                    <div class="time-spent-wrapper">
+                        {{ form.time_spent(class="form-control " + ("is-invalid" if form.time_spent.errors else ""), id="time_spent_input") }}
+                        <span class="time-spent-unit">Minuten</span>
+                    </div>
+                    {% if form.time_spent.errors %}
+                        <div class="invalid-feedback d-block">{% for error in form.time_spent.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Abschnitt 4: Notizen -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-pen"></i> Notizen</h4>
+            <div class="form-group">
+                {{ form.notes.label(class="form-control-label") }}
+                {{ form.notes(class="form-control " + ("is-invalid" if form.notes.errors else ""), rows=5, placeholder="Hier können Sie weitere Anmerkungen zum Workshop festhalten...") }}
+                {% if form.notes.errors %}
+                    <div class="invalid-feedback">{% for error in form.notes.errors %}{{ error }}{% endfor %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-group text-center">
+            <button type="submit" class="btn telekom-button btn-lg px-5">
+                <i class="fas fa-save"></i> {% if is_edit_mode %}Workshop aktualisieren{% else %}Workshop speichern{% endif %}
+            </button>
+            <a href="{% if is_edit_mode %}{{ url_for('main.workshop_dashboard') }}{% else %}{{ url_for('main.workshop_dashboard') }}{% endif %}" class="btn btn-secondary btn-lg ml-3 px-5">
+                <i class="fas fa-times"></i> Abbrechen
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const isEditWorkshop = {{ (is_edit_mode|default(false))|tojson }};
+    // --- 1. Bewertungs-Slider ---
+    const ratingSlider = document.getElementById('rating_slider');
+    const ratingHidden = document.getElementById('overall_rating_hidden');
+    const ratingDisplay = document.getElementById('rating_display');
+    if (ratingSlider && ratingHidden && ratingDisplay) {
+        ratingSlider.addEventListener('input', function() {
+            const val = this.value;
+            ratingHidden.value = val;
+            ratingDisplay.textContent = val;
+        });
+        // Initialwert setzen
+        if (ratingHidden.value) {
+            ratingSlider.value = ratingHidden.value;
+            ratingDisplay.textContent = ratingHidden.value;
+        } else {
+            ratingSlider.value = 5;
+            ratingHidden.value = 5;
+            ratingDisplay.textContent = 5;
+        }
+    }
+
+    // --- 2. Zeitaufwand (ganze Minuten) ---
+    const timeInput = document.getElementById('time_spent_input');
+    if (timeInput) {
+        timeInput.addEventListener('blur', function() {
+            let val = parseInt(this.value);
+            if (isNaN(val) || val < 1) val = 1;
+            this.value = val;
+        });
+    }
+
+    // --- 3. Teilnehmer-Checkboxen und Bewertungen verwalten ---
+    const selectMultiple = document.getElementById('team_member_ids');
+    const checkboxes = document.querySelectorAll('input[name="participant_checkbox"]');
+    const selectAllCheckboxes = document.querySelectorAll('.select-all-checkbox');
+
+    function syncSelectAllStates() {
+        document.querySelectorAll('.team-accordion').forEach(function (accordion) {
+            const team = accordion.dataset.team;
+            if (!team) return;
+            const teamCheckboxes = accordion.querySelectorAll('input[name="participant_checkbox"]');
+            const teamSelectAll = accordion.querySelector('.select-all-checkbox');
+            if (teamCheckboxes.length > 0 && teamSelectAll) {
+                teamSelectAll.checked = Array.from(teamCheckboxes).every(function (cb) { return cb.checked; });
+            }
+        });
+    }
+
+    function renderSelectedChips() {
+        var container = document.getElementById('selected-chips');
+        var countEl = document.getElementById('selected-count');
+        if (!container || !countEl) return;
+        container.innerHTML = '';
+        var checked = Array.prototype.slice.call(document.querySelectorAll('input[name="participant_checkbox"]:checked'));
+        countEl.textContent = String(checked.length);
+        if (checked.length === 0) {
+            var empty = document.createElement('span');
+            empty.className = 'selected-chips-empty';
+            empty.textContent = 'Noch keine Teilnehmer ausgewählt.';
+            container.appendChild(empty);
+            return;
+        }
+        checked.forEach(function (cb) {
+            var id = cb.value;
+            var name = cb.getAttribute('data-member-name') || ('ID ' + id);
+            var chip = document.createElement('span');
+            chip.className = 'participant-chip';
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'participant-chip-name';
+            nameSpan.textContent = name;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'participant-chip-remove';
+            btn.setAttribute('aria-label', name + ' aus Auswahl entfernen');
+            btn.innerHTML = '\u00d7';
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var box = document.getElementById('member-' + id);
+                if (box) {
+                    box.checked = false;
+                    box.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            chip.appendChild(nameSpan);
+            chip.appendChild(btn);
+            container.appendChild(chip);
+        });
+    }
+
+    function updateSelectedIds() {
+        var selectedIds = [];
+        checkboxes.forEach(function (cb) {
+            if (cb.checked) selectedIds.push(cb.value);
+        });
+        Array.from(selectMultiple.options).forEach(function (option) {
+            option.selected = selectedIds.indexOf(option.value) !== -1;
+        });
+        syncSelectAllStates();
+        renderSelectedChips();
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelectedIds);
+    });
+
+    // "Alle auswählen" pro Team
+    selectAllCheckboxes.forEach(selectAll => {
+        selectAll.addEventListener('change', function() {
+            const team = this.dataset.team;
+            const teamCheckboxes = document.querySelectorAll(`input[name="participant_checkbox"][data-team="${team}"]`);
+            teamCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+            updateSelectedIds();
+        });
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const memberId = this.value;
+            const ratingInput = document.querySelector(`input[name="individual_rating_${memberId}"]`);
+            if (ratingInput && !this.checked) {
+                ratingInput.value = '';
+            }
+        });
+    });
+
+    updateSelectedIds();
+
+    document.querySelectorAll('.select-all').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+
+    if (isEditWorkshop) {
+        document.querySelectorAll('.team-accordion').forEach(function (acc) {
+            if (acc.querySelector('input[name="participant_checkbox"]:checked')) {
+                var panel = acc.querySelector('.team-members');
+                if (panel) {
+                    panel.classList.add('expanded');
+                    acc.classList.add('is-open');
+                }
+            }
+        });
+    }
+
+    // --- 4. Suchfilter für Teilnehmer ---
+    const filterInput = document.getElementById('member-filter');
+    if (filterInput) {
+        filterInput.addEventListener('keyup', function() {
+            const filterText = this.value.toLowerCase().trim();
+            const memberItems = document.querySelectorAll('.member-item');
+
+            memberItems.forEach(item => {
+                const memberName = item.dataset.memberName;
+                if (memberName.includes(filterText)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Team-Header ausblenden, wenn keine sichtbaren Mitglieder mehr in diesem Team
+            document.querySelectorAll('.team-accordion').forEach(accordion => {
+                const visibleMembers = accordion.querySelectorAll('.member-item[style*="display: flex"]').length;
+                if (visibleMembers === 0 && filterText !== '') {
+                    accordion.style.display = 'none';
+                } else {
+                    accordion.style.display = 'block';
+                    if (filterText !== '' && visibleMembers > 0) {
+                        var panel = accordion.querySelector('.team-members');
+                        if (panel) {
+                            panel.classList.add('expanded');
+                            accordion.classList.add('is-open');
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('.team-header').forEach(header => {
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('.select-all')) return;
+            const members = this.nextElementSibling;
+            if (!members || !members.classList.contains('team-members')) return;
+            members.classList.toggle('expanded');
+            const acc = this.closest('.team-accordion');
+            if (acc) {
+                acc.classList.toggle('is-open', members.classList.contains('expanded'));
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

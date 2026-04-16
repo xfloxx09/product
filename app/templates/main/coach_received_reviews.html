@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-3">Bewertungen über mich</h2>
+    <p class="text-muted small">Bewertungen von Mitarbeitenden nach Einzelcoachings, in denen Sie als Coach eingetragen waren.</p>
+
+    <form method="get" class="mb-4">
+        <div class="form-row">
+            <div class="col-md-3 mb-2">
+                <label class="small text-muted">Zeitraum</label>
+                <select name="period" class="form-control form-control-sm">
+                    <option value="all" {% if current_period == 'all' %}selected{% endif %}>Alle</option>
+                    <option value="today" {% if current_period == 'today' %}selected{% endif %}>Heute</option>
+                    <option value="yesterday" {% if current_period == 'yesterday' %}selected{% endif %}>Gestern</option>
+                    <option value="this_week" {% if current_period == 'this_week' %}selected{% endif %}>Diese Woche</option>
+                    <option value="last_week" {% if current_period == 'last_week' %}selected{% endif %}>Letzte Woche</option>
+                    <option value="this_month" {% if current_period == 'this_month' %}selected{% endif %}>Dieser Monat</option>
+                    <option value="last_month" {% if current_period == 'last_month' %}selected{% endif %}>Letzter Monat</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Jahr (optional)</label>
+                <select name="year" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for y in year_options %}
+                        <option value="{{ y }}" {% if filter_year == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Monat</label>
+                <select name="month" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for m in month_options_list %}
+                        <option value="{{ m.value }}" {% if filter_month == m.value %}selected{% endif %}>{{ m.text }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Tag</label>
+                <select name="day" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for d in day_options %}
+                        <option value="{{ d }}" {% if filter_day == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 mb-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-sm telekom-button mr-2">Filtern</button>
+                <a href="{{ url_for('main.coach_received_reviews') }}" class="btn btn-sm btn-secondary">Zurücksetzen</a>
+            </div>
+        </div>
+    </form>
+
+    {% if reviews.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Coaching-Datum</th>
+                        <th>Mitarbeiter</th>
+                        <th>Thema</th>
+                        <th>Bewertung</th>
+                        <th class="text-center" style="width:3rem;">Notiz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rev in reviews.items %}
+                        {% set c = rev.coaching %}
+                        <tr>
+                            <td>{% if c %}{{ c.coaching_date|athens_time }}{% else %}-{% endif %}</td>
+                            <td>{% if c and c.team_member %}{{ c.team_member.name }}{% else %}-{% endif %}</td>
+                            <td>{% if c %}{{ c.coaching_subject or '—' }}{% else %}-{% endif %}</td>
+                            <td>{{ rev.rating }}/5</td>
+                            <td class="text-center">
+                                {% if rev.comment %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary btn-review-note py-0 px-2" data-toggle="collapse" data-target="#coachRevNote{{ rev.id }}" aria-expanded="false" title="Kommentar">+</button>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% if rev.comment %}
+                        <tr>
+                            <td colspan="5" class="p-0 border-0">
+                                <div class="collapse" id="coachRevNote{{ rev.id }}">
+                                    <div class="review-comment-panel small m-2">{{ rev.comment }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if reviews.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if reviews.has_prev %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(reviews.prev_num) }}">Vorherige</a></li>
+                {% endif %}
+                {% for page_num in reviews.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == reviews.page %}active{% endif %}">
+                            <a class="page-link" href="{{ page_url(page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if reviews.has_next %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(reviews.next_num) }}">Nächste</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <p class="text-muted">Keine Bewertungen in diesem Zeitraum.</p>
+    {% endif %}
+</div>
+{% endblock %}

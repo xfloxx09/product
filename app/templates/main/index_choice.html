@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+    .index-choice-tile {
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+        border-radius: 20px;
+        text-decoration: none;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid var(--tk-border);
+        background: linear-gradient(155deg, var(--tk-bg) 0%, #321528 42%, #521039 100%);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34), 0 0 0 1px var(--tk-border-strong) inset;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        animation: choiceTileIn .42s ease both;
+    }
+    .index-choice-tile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(120deg, rgba(255,255,255,0.08), rgba(255,255,255,0)),
+            radial-gradient(circle at 85% 18%, var(--tk-magenta-soft), transparent 45%);
+        pointer-events: none;
+    }
+    .index-choice-tile:hover {
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-3px) scale(1.01);
+        border-color: var(--tk-magenta);
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.48), 0 0 28px var(--tk-magenta-glow);
+    }
+    .index-choice-tile i {
+        color: var(--tile-accent, var(--tk-magenta));
+        filter: drop-shadow(0 3px 10px rgba(0,0,0,0.3));
+    }
+    .index-choice-tile p { margin-bottom: 0; opacity: 0.92; }
+    @keyframes choiceTileIn {
+        from { opacity: 0.72; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .index-choice-tile { animation: none; transition: none; }
+    }
+    .planned-tile-link {
+        position: relative;
+        overflow: visible;
+    }
+    .planned-tile-icon-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+    .planned-tile-badge {
+        position: absolute;
+        top: -6px;
+        right: -14px;
+        min-width: 1.65rem;
+        height: 1.65rem;
+        padding: 0 5px;
+        border-radius: 9999px;
+        background: linear-gradient(160deg, #ff4d9a 0%, var(--tk-magenta) 50%, var(--tk-magenta-dark) 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.78rem;
+        line-height: 1.65rem;
+        text-align: center;
+        box-shadow:
+            0 2px 6px rgba(0, 0, 0, 0.22),
+            0 0 0 2px rgba(255, 255, 255, 0.95),
+            0 0 14px rgba(226, 0, 116, 0.35);
+        z-index: 2;
+        animation: planned-badge-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes planned-badge-pop {
+        from { transform: scale(0.6); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .planned-tile-badge { animation: none; }
+    }
+    .index-help-toggle {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 1060;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: linear-gradient(145deg, #e20074 0%, #b8005c 100%);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), 0 0 18px rgba(226, 0, 116, 0.35);
+        cursor: pointer;
+    }
+    .index-help-panel {
+        position: fixed;
+        right: 18px;
+        bottom: 74px;
+        z-index: 1060;
+        width: 340px;
+        max-width: calc(100vw - 24px);
+        max-height: 62vh;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        background: linear-gradient(160deg, #1f1f27 0%, #241325 60%, #2b1231 100%);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+        padding: 0.85rem 0.9rem 0.7rem;
+        color: #f4f1f6;
+        display: none;
+    }
+    .index-help-panel.open { display: block; }
+    .index-help-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.45rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        padding-bottom: 0.45rem;
+    }
+    .index-help-head h6 { margin: 0; font-weight: 700; }
+    .index-help-close {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.25);
+        color: #fff;
+        border-radius: 8px;
+        width: 28px;
+        height: 28px;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .index-help-list { list-style: none; padding: 0; margin: 0; }
+    .index-help-item {
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 0.5rem 0.6rem;
+        margin-bottom: 0.45rem;
+        background: rgba(255,255,255,0.03);
+    }
+    .index-help-item strong { color: #ff8fc7; display: block; margin-bottom: 0.12rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row {% if index_tile_count == 1 %}justify-content-center{% endif %}">
+        {% if has_perm('view_coaching_dashboard') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.coaching_dashboard') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#ff4fa4;">
+                <i class="fas fa-chalkboard-teacher fa-3x mb-2"></i>
+                <h4>Coachings</h4>
+                <p>Alle Einzelcoachings anzeigen</p>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('terminkalender') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.terminkalender') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#c57bff;">
+                <i class="fas fa-calendar-week fa-3x mb-2"></i>
+                <h4 class="mb-0">Terminkalender</h4>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('view_workshop_dashboard') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.workshop_dashboard') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#9aa6b2;">
+                <i class="fas fa-users fa-3x mb-2"></i>
+                <h4>Workshops</h4>
+                <p>Alle Workshops anzeigen</p>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('view_assigned_coachings') or has_perm('assign_coachings') or has_perm('view_pl_qm_dashboard') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.assigned_coachings') }}" class="btn btn-lg btn-block p-4 planned-tile-link index-choice-tile" style="--tile-accent:#64df8c;">
+                <span class="planned-tile-icon-wrap">
+                    {% if assigned_coachings_notify_count > 0 %}
+                    <span class="planned-tile-badge" title="{{ assigned_coachings_notify_count }} aktive Zuweisung(en)" aria-label="{{ assigned_coachings_notify_count }} zugewiesene Coachings offen">{{ assigned_coachings_notify_count }}</span>
+                    {% endif %}
+                    <i class="fas fa-tasks fa-3x"></i>
+                </span>
+                <h4 class="mb-0">{% if has_perm('assign_coachings') %}Zugewiesene Coachings{% else %}Meine Aufgaben{% endif %}</h4>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('planned_coachings') or has_perm('add_workshop') or has_perm('assign_coachings') or has_perm('view_pl_qm_dashboard') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.planned_coachings_list') }}" class="btn btn-lg btn-block p-4 planned-tile-link index-choice-tile" style="--tile-accent:#4debd4;">
+                <span class="planned-tile-icon-wrap">
+                    {% if open_planned_coachings_count > 0 %}
+                    <span class="planned-tile-badge" title="{{ open_planned_coachings_count }} offene Termine" aria-label="{{ open_planned_coachings_count }} offen geplant">{{ open_planned_coachings_count }}</span>
+                    {% endif %}
+                    <i class="fas fa-calendar-alt fa-3x"></i>
+                </span>
+                <h4 class="mb-1">Geplante Coachings / Workshops</h4>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('view_own_coachings') or has_perm('leave_coaching_review') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.my_coachings') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#58d4e4;">
+                <i class="fas fa-user-check fa-3x mb-2"></i>
+                <h4 class="mb-0">Meine Coachings</h4>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('view_review') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.coach_received_reviews') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#ffb15f;">
+                <i class="fas fa-star fa-3x mb-2"></i>
+                <h4>Bewertungen über mich</h4>
+                <p>Feedback von Mitarbeitenden zu Ihren Coachings</p>
+            </a>
+        </div>
+        {% endif %}
+        {% if has_perm('view_all_reviews') %}
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('main.all_coaching_reviews') }}" class="btn btn-lg btn-block p-4 index-choice-tile" style="--tile-accent:#b48bff;">
+                <i class="fas fa-star-half-alt fa-3x mb-2"></i>
+                <h4>Alle Bewertungen</h4>
+                <p>Übersicht nach Projekt (nur zugängliche Projekte)</p>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<button id="indexHelpToggle" class="index-help-toggle" type="button" title="Hilfe zu Funktionen" aria-label="Hilfe öffnen">?</button>
+<aside id="indexHelpPanel" class="index-help-panel" aria-hidden="true">
+    <div class="index-help-head">
+        <h6><i class="fas fa-info-circle mr-1"></i> Was macht was?</h6>
+        <button id="indexHelpClose" class="index-help-close" type="button" aria-label="Schließen">×</button>
+    </div>
+    <ul class="index-help-list">
+        {% if has_perm('view_coaching_dashboard') %}
+        <li class="index-help-item"><strong>Coachings</strong> Übersicht aller Einzelcoachings mit Filtern, Suche und Detailansicht.</li>
+        {% endif %}
+        {% if has_perm('terminkalender') %}
+        <li class="index-help-item"><strong>Terminkalender</strong> Tages-/Monatsplanung, offene Termine und direkte Erfassungswege.</li>
+        {% endif %}
+        {% if has_perm('view_workshop_dashboard') %}
+        <li class="index-help-item"><strong>Workshops</strong> Liste, Kennzahlen und Detailinfos zu Gruppenworkshops.</li>
+        {% endif %}
+        {% if has_perm('view_assigned_coachings') or has_perm('assign_coachings') or has_perm('view_pl_qm_dashboard') %}
+        <li class="index-help-item"><strong>{% if has_perm('assign_coachings') %}Zugewiesene Coachings{% else %}Meine Aufgaben{% endif %}</strong> Aufgaben ansehen, annehmen/bearbeiten und Fortschritt verfolgen.</li>
+        {% endif %}
+        {% if has_perm('planned_coachings') or has_perm('add_workshop') or has_perm('assign_coachings') or has_perm('view_pl_qm_dashboard') %}
+        <li class="index-help-item"><strong>Geplante Coachings / Workshops</strong> Offene Planungen verwalten und fällige Termine starten.</li>
+        {% endif %}
+        {% if has_perm('view_own_coachings') or has_perm('leave_coaching_review') %}
+        <li class="index-help-item"><strong>Meine Coachings</strong> Eigene Coachings und Rückmeldungen als Mitarbeitender.</li>
+        {% endif %}
+        {% if has_perm('view_review') %}
+        <li class="index-help-item"><strong>Bewertungen über mich</strong> Feedback von Mitarbeitenden zu Ihren Coachings einsehen.</li>
+        {% endif %}
+        {% if has_perm('view_all_reviews') %}
+        <li class="index-help-item"><strong>Alle Bewertungen</strong> Projektweite Auswertung der Coaching-Bewertungen.</li>
+        {% endif %}
+    </ul>
+</aside>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.getElementById('indexHelpToggle');
+    var panel = document.getElementById('indexHelpPanel');
+    var closeBtn = document.getElementById('indexHelpClose');
+    if (!toggle || !panel) return;
+    function setOpen(open) {
+        panel.classList.toggle('open', open);
+        panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+    toggle.addEventListener('click', function () { setOpen(!panel.classList.contains('open')); });
+    if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') setOpen(false);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Teammitglied mit Benutzerkonto erstellen</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.name.label }} {{ form.name(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.pylon.label }} {{ form.pylon(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.plt_id.label }} {{ form.plt_id(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.ma_kennung.label }} {{ form.ma_kennung(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.dag_id.label }} {{ form.dag_id(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.team_id.label }} {{ form.team_id(class="form-control") }}
+        </div>
+        <div class="form-check">
+            {{ form.active(class="form-check-input") }}
+            {{ form.active.label(class="form-check-label") }}
+            <small class="form-text text-muted">Wenn deaktiviert, wird das Mitglied ins ARCHIV verschoben.</small>
+        </div>
+        
+        <hr>
+        <div class="form-check">
+            {{ form.create_user(class="form-check-input") }}
+            {{ form.create_user.label(class="form-check-label") }}
+        </div>
+        
+        <div id="user-fields" style="display: none;">
+            <div class="form-group">
+                {{ form.username.label }} {{ form.username(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.email.label }} {{ form.email(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }} {{ form.password(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.password2.label }} {{ form.password2(class="form-control") }}
+            </div>
+        </div>
+        
+        {{ form.submit(class="btn telekom-button") }}
+        <a href="{{ url_for('admin.panel') }}" class="btn btn-secondary">Abbrechen</a>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var createUserCheckbox = document.getElementById('create_user');
+        var userFields = document.getElementById('user-fields');
+        function toggleUserFields() {
+            if (createUserCheckbox.checked) {
+                userFields.style.display = 'block';
+            } else {
+                userFields.style.display = 'none';
+            }
+        }
+        createUserCheckbox.addEventListener('change', toggleUserFields);
+        toggleUserFields();
+    });
+</script>
+{% endblock %}

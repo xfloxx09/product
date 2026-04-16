@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+.planned-page-tabs.card {
+    background: #2b2b2b;
+    border: 1px solid #444;
+}
+.planned-page-tabs .nav-tabs {
+    border-bottom-color: #555;
+    background: #262626;
+    padding: 0.35rem 0.75rem 0 0.75rem;
+    border-radius: 8px 8px 0 0;
+}
+.planned-page-tabs .nav-link {
+    color: #ccc;
+    border: 1px solid transparent;
+    margin-bottom: -1px;
+}
+.planned-page-tabs .nav-link:hover {
+    color: #fff;
+    border-color: #555 #555 transparent;
+    background: #333;
+}
+.planned-page-tabs .nav-link.active {
+    color: #fff;
+    background: #2b2b2b;
+    border-color: #555 #555 #2b2b2b;
+    font-weight: 600;
+}
+.planned-page-tabs .tab-content {
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 1.25rem 1.25rem 1.5rem;
+}
+.planned-page-tabs .tab-content h3 {
+    color: #e0e0e0;
+}
+.planned-open-list .list-group-item {
+    border-radius: 10px !important;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+.planned-open-list .list-group-item:last-child {
+    margin-bottom: 0;
+}
+.planned-notes-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid #3d89a8;
+    background: rgba(23, 162, 184, 0.14);
+    color: #9fdcf0 !important;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none !important;
+}
+.planned-notes-toggle:hover {
+    color: #d4f3fb !important;
+    background: rgba(23, 162, 184, 0.25);
+}
+.planned-group {
+    border: 1px solid #474f5c;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+.planned-group summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.6rem 0.85rem;
+    background: rgba(255,255,255,0.05);
+    color: #f0f0f0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #474f5c;
+}
+.planned-group summary::-webkit-details-marker { display: none; }
+.planned-group-body { padding: 0.65rem 0.7rem 0.2rem; }
+.planned-group:not([open]) summary { border-bottom: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set n_open = (items|length if can_see_coaching_plans else 0) + (workshop_items|length if can_see_workshop_plans else 0) %}
+{% set n_done = (fulfilled_plans|length if can_see_coaching_plans else 0) + (fulfilled_workshop_plans|length if can_see_workshop_plans else 0) %}
+<div class="container mt-4">
+    <h2 class="mb-2"><i class="fas fa-calendar-alt text-info"></i> Geplante Coachings / Workshops</h2>
+
+    <div class="card planned-page-tabs mb-4 border-0 shadow-none">
+        <ul class="nav nav-tabs nav-justified" id="plannedMainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="tab-offen-link" data-toggle="tab" href="#tab-offen" role="tab" aria-controls="tab-offen" aria-selected="true">
+                    Offen {% if n_open %}<span class="badge badge-info ml-1">{{ n_open }}</span>{% endif %}
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-geschlossen-link" data-toggle="tab" href="#tab-geschlossen" role="tab" aria-controls="tab-geschlossen" aria-selected="false">
+                    Abgeschlossen {% if n_done %}<span class="badge badge-secondary ml-1">{{ n_done }}</span>{% endif %}
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content" id="plannedMainTabContent">
+            <div class="tab-pane fade show active" id="tab-offen" role="tabpanel" aria-labelledby="tab-offen-link">
+                {% set n_pc_today = (items|selectattr('planned_for_date', 'equalto', today_d)|list|length) if can_see_coaching_plans else 0 %}
+                {% set n_ws_today = (workshop_items|selectattr('planned_for_date', 'equalto', today_d)|list|length) if can_see_workshop_plans else 0 %}
+                {% set n_today_total = n_pc_today + n_ws_today %}
+                {% if n_today_total %}
+                {% set act_banner = namespace(coaching=0, workshop=0) %}
+                {% for it in items %}
+                    {% if can_see_coaching_plans and it.planned_for_date == today_d and it.coach_id == current_user.id and has_perm('planned_coachings') %}
+                        {% set _proj = it.project_id or (it.team_member.team.project_id if it.team_member and it.team_member.team else None) %}
+                        {% if _proj %}{% set act_banner.coaching = act_banner.coaching + 1 %}{% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% for it in workshop_items %}
+                    {% if can_see_workshop_plans and it.planned_for_date == today_d and it.coach_id == current_user.id and has_perm('add_workshop') %}
+                        {% set act_banner.workshop = act_banner.workshop + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {% set n_today_actionable = act_banner.coaching + act_banner.workshop %}
+                <div class="alert alert-warning border-0 mb-3" style="background: rgba(255, 193, 7, 0.12); color: #f0f0f0; border-left: 4px solid #ffc107 !important;">
+                    <p class="mb-2">
+                        <i class="fas fa-calendar-day text-warning mr-2"></i>
+                        <strong>Hinweis:</strong>
+                        {% if n_today_total == 1 %}
+                        Ein Termin ist <strong>für heute</strong> fällig.
+                        {% else %}
+                        <strong>{{ n_today_total }}</strong> Termine sind <strong>für heute</strong> fällig.
+                        {% endif %}
+                        {% if n_today_actionable %}
+                        Sie können die betreffenden Termine hier direkt starten:
+                        {% endif %}
+                    </p>
+                    {% if n_today_actionable %}
+                    <div class="d-flex flex-wrap align-items-center planned-due-banner-actions" style="gap: 0.5rem;">
+                        {% for it in items %}
+                            {% if can_see_coaching_plans and it.planned_for_date == today_d and it.coach_id == current_user.id and has_perm('planned_coachings') %}
+                                {% set proj = it.project_id or (it.team_member.team.project_id if it.team_member and it.team_member.team else None) %}
+                                {% if proj %}
+                                <a class="btn btn-sm telekom-button" style="background-color: #e20074; color: white; border-radius: 16px;"
+                                   href="{{ url_for('main.add_coaching', project=proj, planned_id=it.id) }}">
+                                    <i class="fas fa-chalkboard-teacher"></i> Jetzt coachen · {{ it.team_member.name }}
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for it in workshop_items %}
+                            {% if can_see_workshop_plans and it.planned_for_date == today_d and it.coach_id == current_user.id and has_perm('add_workshop') %}
+                                {% if it.project_id %}
+                                <a class="btn btn-sm telekom-button" style="background-color: #6f42c1; color: white; border-radius: 16px;"
+                                   href="{{ url_for('main.add_workshop', project=it.project_id, planned_workshop=it.id) }}">
+                                    <i class="fas fa-users"></i> Workshop erfassen · {{ it.title }}
+                                </a>
+                                {% else %}
+                                <a class="btn btn-sm telekom-button" style="background-color: #6f42c1; color: white; border-radius: 16px;"
+                                   href="{{ url_for('main.add_workshop', planned_workshop=it.id) }}">
+                                    <i class="fas fa-users"></i> Workshop erfassen · {{ it.title }}
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% elif n_today_total > 0 %}
+                    <p class="small mb-0 text-muted">Die fälligen Termine sind anderen Coaches zugewiesen oder ohne passendes Projekt — Details in den Listen unten.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if can_see_coaching_plans %}
+                <h3 class="mb-3 h5"><i class="fas fa-user-check" style="color:#20c997;"></i> Geplante Coachings (offen)</h3>
+                {% if not items %}
+                <div class="alert alert-secondary mb-4">{% if can_view_others_planned %}Keine offenen geplanten Coachings in Ihrem Projektbereich.{% else %}Sie haben keine offenen geplanten Coachings.{% endif %}</div>
+                {% else %}
+                {% set cg = coaching_open_groups %}
+                {% for group_key, group_label in [('today', 'Heute'), ('next_week', 'Nächste 7 Tage'), ('next_month', 'Nächster Monat'), ('later', 'Später')] %}
+                {% set group_items = cg.get(group_key, []) %}
+                {% if group_items %}
+                <details class="planned-group" {% if group_key == 'today' %}open{% endif %}>
+                    <summary>
+                        <span>{{ group_label }}</span>
+                        <span class="badge badge-secondary">{{ group_items|length }}</span>
+                    </summary>
+                    <div class="planned-group-body">
+                <div class="list-group mb-2 planned-open-list">
+                    {% for it in group_items %}
+                    {% set is_mine = (it.coach_id == current_user.id) %}
+                    {% set can_start = it.planned_for_date <= today_d %}
+                    <div class="list-group-item flex-column align-items-start" style="background: #333; border-color: #444; color: #eee;">
+                        <div class="d-flex w-100 justify-content-between align-items-center flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <strong>{{ it.team_member.name }}</strong>
+                                {% if it.team and it.team.name %}
+                                <span class="text-muted">({{ it.team.name }})</span>
+                                {% endif %}
+                                <span class="badge badge-info ml-2">{{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% if it.project %}
+                                <span class="badge badge-secondary ml-1">{{ it.project.name }}</span>
+                                {% endif %}
+                                {% if not is_mine and it.coach %}
+                                <span class="badge badge-outline-light border ml-1" style="color:#ccc;" title="Zuständiger Coach"><i class="fas fa-user-tie"></i> {{ it.coach.coach_display_name }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if is_mine and has_perm('planned_coachings') %}
+                                {% if can_start %}
+                                <a class="btn btn-sm telekom-button" style="background-color: #e20074; color: white; border-radius: 16px;"
+                                   href="{{ url_for('main.add_coaching', project=it.project_id, planned_id=it.id) }}">
+                                    <i class="fas fa-chalkboard-teacher"></i> Jetzt coachen
+                                </a>
+                                {% else %}
+                                <span class="badge badge-warning text-dark"><i class="fas fa-pause"></i> Ab {{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% endif %}
+                                {% elif not is_mine %}
+                                <span class="badge badge-secondary"><i class="fas fa-eye"></i> Nur Ansicht</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if it.has_verabredung and it.verabredung_text %}
+                        <p class="mb-1 mt-2 small"><strong>Vereinbarung:</strong> {{ it.verabredung_text[:200] }}{% if it.verabredung_text|length > 200 %}…{% endif %}</p>
+                        {% elif it.has_verabredung %}
+                        <p class="mb-1 mt-2 small text-muted"><strong>Vereinbarung</strong> (ohne Text)</p>
+                        {% endif %}
+                        {% if it.notes %}
+                        <div class="mt-2">
+                            <a class="planned-notes-toggle collapsed" data-toggle="collapse" href="#plan-notes-{{ it.id }}" role="button" aria-expanded="false" aria-controls="plan-notes-{{ it.id }}">
+                                <i class="far fa-sticky-note"></i> Notizen anzeigen
+                            </a>
+                            <div class="collapse mt-1" id="plan-notes-{{ it.id }}">
+                                <div class="small border-left border-info pl-2" style="white-space: pre-wrap;">{{ it.notes }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if is_mine and has_perm('planned_coachings') %}
+                        <div class="mt-3 pt-3 border-top border-secondary w-100">
+                            <p class="small text-muted mb-2 mb-md-1">Termin anpassen oder Planung aufheben</p>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <form method="post" action="{{ url_for('main.planned_coaching_update_date', planned_id=it.id) }}" class="form-inline d-flex flex-wrap align-items-center mr-md-3 mb-2 mb-md-0">
+                                    <label class="sr-only" for="plan-date-{{ it.id }}">Geplanter Tag</label>
+                                    <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary" id="plan-date-{{ it.id }}" name="planned_for_date" value="{{ it.planned_for_date.strftime('%Y-%m-%d') }}" required>
+                                    <button type="submit" class="btn btn-sm btn-outline-info ml-2">Datum speichern</button>
+                                </form>
+                                <form method="post" action="{{ url_for('main.planned_coaching_delete', planned_id=it.id) }}" class="mb-0" onsubmit="return confirm('Dieses geplante Coaching wirklich entfernen?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i> Entfernen</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                    </div>
+                </details>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+
+                {% if can_see_workshop_plans %}
+                <h3 class="mt-4 mb-3 h5"><i class="fas fa-users" style="color:#6f42c1;"></i> Geplante Workshops (offen)</h3>
+                {% if not workshop_items %}
+                <div class="alert alert-secondary mb-0">{% if can_view_others_planned %}Keine offenen geplanten Workshops in Ihrem Projektbereich.{% else %}Sie haben keine offenen geplanten Workshops.{% endif %}</div>
+                {% else %}
+                {% set wg = workshop_open_groups %}
+                {% for group_key, group_label in [('today', 'Heute'), ('next_week', 'Nächste 7 Tage'), ('next_month', 'Nächster Monat'), ('later', 'Später')] %}
+                {% set group_items = wg.get(group_key, []) %}
+                {% if group_items %}
+                <details class="planned-group" {% if group_key == 'today' %}open{% endif %}>
+                    <summary>
+                        <span>{{ group_label }}</span>
+                        <span class="badge badge-secondary">{{ group_items|length }}</span>
+                    </summary>
+                    <div class="planned-group-body">
+                <div class="list-group mb-2 planned-open-list">
+                    {% for it in group_items %}
+                    {% set is_mine_w = (it.coach_id == current_user.id) %}
+                    {% set can_start = it.planned_for_date <= today_d %}
+                    <div class="list-group-item flex-column align-items-start" style="background: #333; border-color: #444; color: #eee;">
+                        <div class="d-flex w-100 justify-content-between align-items-center flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <strong>{{ it.title }}</strong>
+                                <span class="badge ml-2" style="background:#6f42c1;color:#fff;">{{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% if it.project %}
+                                <span class="badge badge-secondary ml-1">{{ it.project.name }}</span>
+                                {% endif %}
+                                {% if not is_mine_w and it.coach %}
+                                <span class="badge badge-outline-light border ml-1" style="color:#ccc;" title="Zuständiger Coach"><i class="fas fa-user-tie"></i> {{ it.coach.coach_display_name }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if is_mine_w and has_perm('add_workshop') %}
+                                {% if can_start %}
+                                <a class="btn btn-sm telekom-button" style="background-color: #6f42c1; color: white; border-radius: 16px;"
+                                   href="{% if it.project_id %}{{ url_for('main.add_workshop', project=it.project_id, planned_workshop=it.id) }}{% else %}{{ url_for('main.add_workshop', planned_workshop=it.id) }}{% endif %}">
+                                    <i class="fas fa-users"></i> Workshop erfassen
+                                </a>
+                                {% else %}
+                                <span class="badge badge-warning text-dark"><i class="fas fa-pause"></i> Ab {{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% endif %}
+                                {% elif not is_mine_w %}
+                                <span class="badge badge-secondary"><i class="fas fa-eye"></i> Nur Ansicht</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if it.notes %}
+                        <p class="mb-0 mt-2 small text-muted" style="white-space: pre-wrap;">{{ it.notes }}</p>
+                        {% endif %}
+                        {% if is_mine_w and has_perm('add_workshop') %}
+                        <div class="mt-3 pt-3 border-top border-secondary w-100">
+                            <p class="small text-muted mb-2 mb-md-1">Termin anpassen oder Vormerkung löschen</p>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <form method="post" action="{{ url_for('main.planned_workshop_update_date', planned_w_id=it.id) }}" class="form-inline d-flex flex-wrap align-items-center mr-md-3 mb-2 mb-md-0">
+                                    <label class="sr-only" for="plan-w-date-{{ it.id }}">Geplanter Tag</label>
+                                    <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary" id="plan-w-date-{{ it.id }}" name="planned_for_date" value="{{ it.planned_for_date.strftime('%Y-%m-%d') }}" required>
+                                    <button type="submit" class="btn btn-sm btn-outline-info ml-2">Datum speichern</button>
+                                </form>
+                                <form method="post" action="{{ url_for('main.planned_workshop_delete', planned_w_id=it.id) }}" class="mb-0" onsubmit="return confirm('Diese Workshop-Planung wirklich entfernen?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i> Entfernen</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                    </div>
+                </details>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+
+            </div>
+
+            <div class="tab-pane fade" id="tab-geschlossen" role="tabpanel" aria-labelledby="tab-geschlossen-link">
+
+                {% if can_see_coaching_plans %}
+                <h3 class="mb-2 h5"><i class="fas fa-check-double text-success"></i> Abgeschlossene geplante Coachings</h3>
+                <p class="text-muted small">Erfüllte Termine mit Vereinbarung und Link zum gespeicherten Coaching-Bericht.</p>
+
+                {% if not fulfilled_plans %}
+                <div class="alert alert-secondary mb-4">Noch keine erfüllten geplanten Coachings in diesem Bereich.</div>
+                {% else %}
+                {% set cdg = coaching_done_groups %}
+                {% for group_key, group_label in [('today', 'Heute'), ('last_week', 'Letzte 7 Tage'), ('last_month', 'Letzter Monat'), ('older', 'Älter')] %}
+                {% set group_items = cdg.get(group_key, []) %}
+                {% if group_items %}
+                <details class="planned-group" {% if group_key == 'today' %}open{% endif %}>
+                    <summary>
+                        <span>{{ group_label }}</span>
+                        <span class="badge badge-secondary">{{ group_items|length }}</span>
+                    </summary>
+                    <div class="planned-group-body">
+                <div class="list-group mb-2 planned-open-list">
+                    {% for it in group_items %}
+                    {% set is_mine_fc = (it.coach_id == current_user.id) %}
+                    <div class="list-group-item flex-column align-items-start" style="background: #1e1e1e; border-color: #444; color: #eee;">
+                        <div class="d-flex w-100 justify-content-between align-items-start flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <strong>{{ it.team_member.name }}</strong>
+                                {% if it.team and it.team.name %}
+                                <span class="text-muted">({{ it.team.name }})</span>
+                                {% endif %}
+                                {% if not is_mine_fc and it.coach %}
+                                <span class="badge badge-outline-light border ml-1" style="color:#aaa;"><i class="fas fa-user-tie"></i> {{ it.coach.coach_display_name }}</span>
+                                {% endif %}
+                                <span class="badge badge-secondary ml-2">geplant: {{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% if it.fulfilled_coaching and it.fulfilled_coaching.coaching_date %}
+                                <span class="badge badge-light text-dark ml-1">Coaching: {{ it.fulfilled_coaching.coaching_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                                {% endif %}
+                                {% if it.project %}
+                                <span class="badge badge-secondary ml-1">{{ it.project.name }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if it.fulfilled_coaching_id %}
+                                <a class="btn btn-sm btn-outline-info" href="{{ url_for('main.view_fulfilled_plan_bericht', coaching_id=it.fulfilled_coaching_id) }}">
+                                    <i class="fas fa-file-alt"></i> Bericht anzeigen
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if it.has_verabredung %}
+                        <p class="mb-1 mt-2 small">
+                            <strong>Vereinbarung:</strong>
+                            {% if it.verabredung_text %}
+                            {{ it.verabredung_text[:400] }}{% if it.verabredung_text|length > 400 %}…{% endif %}
+                            {% else %}
+                            <span class="text-muted">(ohne Text)</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0 small">
+                            {% if it.verabredung_erfuellt is sameas true %}
+                            <span class="badge badge-success">Vereinbarung erfüllt</span>
+                            {% elif it.verabredung_erfuellt is sameas false %}
+                            <span class="badge badge-warning text-dark">Vereinbarung nicht erfüllt</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Vereinbarung — k. Angabe</span>
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                    </div>
+                </details>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+
+                {% if can_see_workshop_plans %}
+                <h3 class="mt-4 mb-2 h5"><i class="fas fa-check-double text-success"></i> Abgeschlossene geplante Workshops</h3>
+                <p class="text-muted small">Nach dem Speichern im Workshop-Formular erscheint der Eintrag hier.</p>
+                {% if not fulfilled_workshop_plans %}
+                <div class="alert alert-secondary mb-0">Noch keine erfüllten Planungen in diesem Bereich.</div>
+                {% else %}
+                {% set wdg = workshop_done_groups %}
+                {% for group_key, group_label in [('today', 'Heute'), ('last_week', 'Letzte 7 Tage'), ('last_month', 'Letzter Monat'), ('older', 'Älter')] %}
+                {% set group_items = wdg.get(group_key, []) %}
+                {% if group_items %}
+                <details class="planned-group" {% if group_key == 'today' %}open{% endif %}>
+                    <summary>
+                        <span>{{ group_label }}</span>
+                        <span class="badge badge-secondary">{{ group_items|length }}</span>
+                    </summary>
+                    <div class="planned-group-body">
+                <div class="list-group mb-2 planned-open-list">
+                    {% for it in group_items %}
+                    {% set is_mine_fw = (it.coach_id == current_user.id) %}
+                    <div class="list-group-item flex-column align-items-start" style="background: #1e1e1e; border-color: #444; color: #eee;">
+                        <div class="d-flex w-100 justify-content-between align-items-start flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <strong>{{ it.title }}</strong>
+                                {% if not is_mine_fw and it.coach %}
+                                <span class="badge badge-outline-light border ml-1" style="color:#aaa;"><i class="fas fa-user-tie"></i> {{ it.coach.coach_display_name }}</span>
+                                {% endif %}
+                                <span class="badge badge-secondary ml-2">geplant: {{ it.planned_for_date.strftime('%d.%m.%Y') }}</span>
+                                {% if it.fulfilled_workshop and it.fulfilled_workshop.workshop_date %}
+                                <span class="badge badge-light text-dark ml-1">Workshop: {{ it.fulfilled_workshop.workshop_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                                {% endif %}
+                                {% if it.project %}
+                                <span class="badge badge-secondary ml-1">{{ it.project.name }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a class="btn btn-sm btn-outline-info" href="{{ url_for('main.workshop_dashboard') }}">
+                                    <i class="fas fa-list"></i> Workshop-Übersicht
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                    </div>
+                </details>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <p class="mt-4"><a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Zurück</a></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function() {
+    function activateFromHash() {
+        var h = (window.location.hash || '').replace(/^#/, '');
+        if (h === 'geschlossen' || h === 'abgeschlossen') {
+            if (typeof jQuery !== 'undefined') {
+                jQuery('#tab-geschlossen-link').tab('show');
+            }
+        } else if (h === 'offen') {
+            if (typeof jQuery !== 'undefined') {
+                jQuery('#tab-offen-link').tab('show');
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', activateFromHash);
+    window.addEventListener('hashchange', activateFromHash);
+})();
+</script>
+{% endblock %}

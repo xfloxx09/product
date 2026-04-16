@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-3">Meine Coachings</h2>
+
+    <form method="get" class="mb-4">
+        <div class="form-row">
+            <div class="col-md-3 mb-2">
+                <label class="small text-muted">Zeitraum</label>
+                <select name="period" class="form-control form-control-sm">
+                    <option value="all" {% if current_period == 'all' %}selected{% endif %}>Alle</option>
+                    <option value="today" {% if current_period == 'today' %}selected{% endif %}>Heute</option>
+                    <option value="yesterday" {% if current_period == 'yesterday' %}selected{% endif %}>Gestern</option>
+                    <option value="this_week" {% if current_period == 'this_week' %}selected{% endif %}>Diese Woche</option>
+                    <option value="last_week" {% if current_period == 'last_week' %}selected{% endif %}>Letzte Woche</option>
+                    <option value="this_month" {% if current_period == 'this_month' %}selected{% endif %}>Dieser Monat</option>
+                    <option value="last_month" {% if current_period == 'last_month' %}selected{% endif %}>Letzter Monat</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Jahr (optional)</label>
+                <select name="year" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for y in year_options %}
+                        <option value="{{ y }}" {% if filter_year == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Monat</label>
+                <select name="month" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for m in month_options_list %}
+                        <option value="{{ m.value }}" {% if filter_month == m.value %}selected{% endif %}>{{ m.text }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="small text-muted">Tag</label>
+                <select name="day" class="form-control form-control-sm">
+                    <option value="">—</option>
+                    {% for d in day_options %}
+                        <option value="{{ d }}" {% if filter_day == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 mb-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-sm telekom-button mr-2">Filtern</button>
+                <a href="{{ url_for('main.my_coachings') }}" class="btn btn-sm btn-secondary">Zurücksetzen</a>
+            </div>
+        </div>
+        <p class="small text-muted mb-0">Wenn Sie Jahr wählen, überschreibt das die Schnellfilter (außer „Alle“ im Zeitraum wird ignoriert).</p>
+    </form>
+
+    {% if can_leave_review and coachings.items %}
+    <div class="alert alert-info small mb-3">
+        In der Spalte <strong>Aktion</strong>: <strong>Bewertung abgeben</strong> (nur einmal möglich). Nach dem Absenden erscheint ein <strong>Haken</strong>.
+    </div>
+    {% endif %}
+
+    {% if coachings.items %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Coach</th>
+                        <th>Coaching Stil</th>
+                        <th>Thema</th>
+                        <th>Ihre Bewertung</th>
+                        {% if can_leave_review %}<th>Aktion</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coaching in coachings.items %}
+                        <tr>
+                            <td>{{ coaching.coaching_date|athens_time }}</td>
+                            <td>{{ coaching.coach.coach_display_name if coaching.coach else '-' }}</td>
+                            <td>{{ coaching.coaching_style }}</td>
+                            <td>{{ coaching.coaching_subject or '-' }}</td>
+                            <td>
+                                {% if coaching.employee_review %}
+                                    {{ coaching.employee_review.rating }}/5
+                                    {% if coaching.employee_review.comment %}
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ml-1 align-baseline btn-review-note py-0 px-2" data-toggle="collapse" data-target="#myCoachingNote{{ coaching.id }}" aria-expanded="false" title="Kommentar">+</button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            {% if can_leave_review %}
+                            <td class="text-center">
+                                {% if coaching.employee_review %}
+                                <span class="text-success" title="Bewertung abgegeben"><i class="fas fa-check-circle fa-lg"></i></span>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-outline-info review-open-btn"
+                                        data-coaching-id="{{ coaching.id }}">Bewertung abgeben</button>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% if coaching.employee_review and coaching.employee_review.comment %}
+                        <tr>
+                            <td colspan="{{ 6 if can_leave_review else 5 }}" class="p-0 border-0">
+                                <div class="collapse" id="myCoachingNote{{ coaching.id }}">
+                                    <div class="review-comment-panel small text-muted m-2">{{ coaching.employee_review.comment }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if coachings.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if coachings.has_prev %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(coachings.prev_num) }}">Vorherige</a></li>
+                {% endif %}
+                {% for page_num in coachings.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == coachings.page %}active{% endif %}">
+                            <a class="page-link" href="{{ page_url(page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if coachings.has_next %}
+                    <li class="page-item"><a class="page-link" href="{{ page_url(coachings.next_num) }}">Nächste</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        {% if not has_team_member_link %}
+        <div class="alert alert-warning">
+            Es sind <strong>keine Coachings</strong> sichtbar, weil Ihr Benutzerkonto mit keinem <strong>Teammitglied</strong> verknüpft ist.
+            Ohne diese Verknüpfung kann das System Ihre Einzelcoachings nicht zuordnen (und es erscheint auch kein Bewertungs-Button).
+            Bitte die Administration prüfen: Benutzer bearbeiten und mit dem passenden Teammitglied verknüpfen, oder CSV-Import mit Login-Zuordnung nutzen.
+        </div>
+        {% elif can_leave_review %}
+        <div class="alert alert-secondary">
+            <strong>Keine Coachings</strong> in diesem Zeitraum oder mit diesen Filtern.
+            <a href="{{ url_for('main.my_coachings') }}" class="alert-link">Alle Filter zurücksetzen</a>.
+            Sobald hier Zeilen erscheinen, gibt es in der Spalte „Aktion“ die Bewertung.
+        </div>
+        {% else %}
+        <p class="text-muted">Keine Coachings gefunden.</p>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% if can_leave_review %}
+<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content modal-coaching-review">
+            <form method="post" action="{{ url_for('main.submit_coaching_review') }}">
+                {{ review_form.hidden_tag() }}
+                {{ review_form.next() }}
+                <div class="modal-header modal-coaching-review-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Coaching bewerten</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="review_coaching_pk" id="modalCoachingId" value="" autocomplete="off">
+                    <div class="form-group star-rating-wrap">
+                        <label class="form-control-label">Sterne wählen <span class="text-muted font-weight-normal">(links 1 · rechts 5)</span></label>
+                        <div class="star-rating-row" id="modalStarRating" role="group" aria-label="Bewertung 1 bis 5 Sterne">
+                            {% for s in [1,2,3,4,5] %}
+                            <button type="button" class="star-rating-star is-lit" data-star="{{ s }}" aria-label="{{ s }} von 5 Sternen">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <p class="small text-muted mb-2"><span class="star-rating-value-label">5</span> von 5 Sternen</p>
+                        {{ review_form.rating(id='modalRating') }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label">Wer soll die Bewertung sehen?</label>
+                        <div class="form-check">
+                            {{ review_form.visible_to_coach(class="form-check-input", id="modalVisibleToCoach") }}
+                            <label class="form-check-label" for="modalVisibleToCoach">Coach/Teamleiter</label>
+                        </div>
+                        <div class="form-check">
+                            {{ review_form.visible_to_manager(class="form-check-input", id="modalVisibleToManager") }}
+                            <label class="form-check-label" for="modalVisibleToManager">Projektleiter/Manager/Abteilungsleiter</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ review_form.comment.label(class="form-control-label") }}
+                        {{ review_form.comment(class="form-control", rows=4, id="modalComment") }}
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+                    {{ review_form.submit(class="btn telekom-button") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% if can_leave_review %}
+<script src="{{ url_for('static', filename='review_stars.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var stars = document.getElementById('modalStarRating');
+    var ratingIn = document.getElementById('modalRating');
+    if (stars && ratingIn && window.hsReviewStarsInitOnce) window.hsReviewStarsInitOnce(stars, ratingIn);
+});
+document.querySelectorAll('.review-open-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.getElementById('modalCoachingId').value = String(this.getAttribute('data-coaching-id'));
+        document.getElementById('modalComment').value = '';
+        var stars = document.getElementById('modalStarRating');
+        var ratingIn = document.getElementById('modalRating');
+        if (ratingIn) ratingIn.value = '5';
+        if (stars && ratingIn && window.hsReviewStarsSync) window.hsReviewStarsSync(stars, ratingIn, 5);
+        $('#reviewModal').modal('show');
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
