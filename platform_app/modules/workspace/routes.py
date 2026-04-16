@@ -48,7 +48,7 @@ def coaching_ops_hub():
             flash("Your role is no longer valid for workflow changes.", "danger")
             return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
         try:
-            case = create_planned_case_from_form(
+            coaching_case = create_planned_case_from_form(
                 tenant_id=tenant.id,
                 actor_user_id=current_user.id,
                 form_data=request.form,
@@ -66,10 +66,10 @@ def coaching_ops_hub():
             tenant.id,
             "workspace.coaching_case_created",
             {
-                "case_id": case.id,
-                "agent_id": case.agent_id,
-                "source_type": case.source_type,
-                "priority": case.priority,
+                "case_id": coaching_case.id,
+                "agent_id": coaching_case.agent_id,
+                "source_type": coaching_case.source_type,
+                "priority": coaching_case.priority,
             },
             actor_user_id=current_user.id,
         )
