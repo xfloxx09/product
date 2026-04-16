@@ -43,7 +43,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No teams yet.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-diagram-3"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-diagram-3"></i> No teams yet</h4>
+                <p>Create your first team to structure reporting lines and coaching scopes.</p>
+            </div>
         {% endif %}
     </article>
 </section>

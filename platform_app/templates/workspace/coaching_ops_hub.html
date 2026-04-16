@@ -48,7 +48,17 @@
                         <strong>{{ case.title }}</strong><br>
                         <span class="muted">{{ case.source_type|replace('_', ' ')|title }}</span>
                     </td>
-                    <td><span class="pill">{{ case.status|replace('_', ' ')|title }}</span></td>
+                    <td>
+                        {% set case_status_class = "is-neutral" %}
+                        {% if case.status in ["completed"] %}
+                            {% set case_status_class = "is-success" %}
+                        {% elif case.status in ["in_progress", "follow_up", "planned"] %}
+                            {% set case_status_class = "is-warning" %}
+                        {% elif case.status in ["cancelled"] %}
+                            {% set case_status_class = "is-danger" %}
+                        {% endif %}
+                        <span class="status-badge {{ case_status_class }}">{{ case.status|replace('_', ' ')|title }}</span>
+                    </td>
                     <td>{{ case.priority|title }}</td>
                     <td>{{ case.assignee.full_name if case.assignee else "-" }}</td>
                     <td>{{ case.due_at.strftime("%Y-%m-%d") if case.due_at else "-" }}</td>
@@ -107,7 +117,7 @@
                     <input type="date" name="due_at">
                 </label>
             </div>
-            <button class="btn btn-primary" type="submit">Create coaching case</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-plus-circle"></i> Create coaching case</button>
         </form>
     </article>
 </section>
@@ -199,7 +209,17 @@
                 {% for row in sla_rows %}
                 <tr>
                     <td>{{ row.agent.full_name }}</td>
-                    <td>{{ row.status|replace('_', ' ')|title }}</td>
+                    <td>
+                        {% set sla_board_status_class = "is-neutral" %}
+                        {% if row.status in ["on_track", "healthy"] %}
+                            {% set sla_board_status_class = "is-success" %}
+                        {% elif row.status in ["due_soon", "warning"] %}
+                            {% set sla_board_status_class = "is-warning" %}
+                        {% elif row.status in ["overdue", "missed"] %}
+                            {% set sla_board_status_class = "is-danger" %}
+                        {% endif %}
+                        <span class="status-badge {{ sla_board_status_class }}">{{ row.status|replace('_', ' ')|title }}</span>
+                    </td>
                     <td>{{ row.cadence_days }} days</td>
                     <td>{{ row.last_coached_at.strftime("%Y-%m-%d") if row.last_coached_at else "-" }}</td>
                 </tr>
@@ -234,7 +254,17 @@
                     <td>{{ row.agent.full_name }}</td>
                     <td>{{ row.agent.team.name if row.agent.team else "-" }}</td>
                     <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
-                    <td>{{ row.risk_status|replace('_', ' ')|title }}</td>
+                    <td>
+                        {% set watch_risk_class = "is-neutral" %}
+                        {% if row.risk_status in ["critical", "high_risk"] %}
+                            {% set watch_risk_class = "is-danger" %}
+                        {% elif row.risk_status in ["declining", "watch"] %}
+                            {% set watch_risk_class = "is-warning" %}
+                        {% elif row.risk_status in ["stable", "improving"] %}
+                            {% set watch_risk_class = "is-success" %}
+                        {% endif %}
+                        <span class="status-badge {{ watch_risk_class }}">{{ row.risk_status|replace('_', ' ')|title }}</span>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

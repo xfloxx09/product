@@ -177,7 +177,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No data sources yet.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-plug"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-plug"></i> No data sources yet</h4>
+                <p>Create a connector to start ingesting operational data into your workspace.</p>
+            </div>
         {% endif %}
     </article>
 </section>
@@ -212,7 +216,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No sync jobs yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-arrow-repeat"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-arrow-repeat"></i> No sync jobs yet</h4>
+            <p>Run a source manually or wait for a scheduled cycle to generate sync history.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

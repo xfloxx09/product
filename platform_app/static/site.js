@@ -2,12 +2,16 @@
   const key = "coachingos-theme";
   const logoKeyPrefix = "coachingos-tenant-logo-";
   const presentationKey = "coachingos-presentation-mode";
+  const sidebarKey = "coachingos-sidebar-collapsed";
+  const densityKey = "coachingos-compact-density";
   const tourKey = "coachingos-tour-complete-v1";
   const body = document.body;
   const tenantSlug = body.getAttribute("data-tenant-slug") || "";
   const toggle = document.querySelector("[data-theme-toggle]");
   const icon = toggle ? toggle.querySelector("i") : null;
   const presentationToggle = document.querySelector("[data-presentation-toggle]");
+  const sidebarToggle = document.querySelector("[data-sidebar-toggle]");
+  const densityToggle = document.querySelector("[data-density-toggle]");
   const logoOpen = document.querySelector("[data-logo-open]");
   const logoBackdrop = document.querySelector("[data-logo-backdrop]");
   const logoModal = document.querySelector("[data-logo-modal]");
@@ -60,9 +64,46 @@
     localStorage.setItem(presentationKey, enabled ? "1" : "0");
   }
 
+  function setSidebarCollapsed(enabled) {
+    body.classList.toggle("sidebar-collapsed", Boolean(enabled));
+    if (sidebarToggle) {
+      sidebarToggle.setAttribute("title", enabled ? "Expand sidebar" : "Collapse sidebar");
+      sidebarToggle.setAttribute("aria-label", enabled ? "Expand sidebar" : "Collapse sidebar");
+      const sidebarIcon = sidebarToggle.querySelector("i");
+      if (sidebarIcon) {
+        sidebarIcon.className = enabled ? "bi bi-layout-sidebar" : "bi bi-layout-sidebar-inset";
+      }
+    }
+    localStorage.setItem(sidebarKey, enabled ? "1" : "0");
+  }
+
+  function setCompactDensity(enabled) {
+    body.classList.toggle("compact-density", Boolean(enabled));
+    if (densityToggle) {
+      densityToggle.setAttribute("title", enabled ? "Disable compact tables" : "Enable compact tables");
+      densityToggle.setAttribute("aria-label", enabled ? "Disable compact tables" : "Enable compact tables");
+      const densityIcon = densityToggle.querySelector("i");
+      if (densityIcon) {
+        densityIcon.className = enabled ? "bi bi-table" : "bi bi-tablet";
+      }
+    }
+    localStorage.setItem(densityKey, enabled ? "1" : "0");
+  }
+
   if (presentationToggle) {
     presentationToggle.addEventListener("click", function () {
       setPresentationMode(!body.classList.contains("presentation-mode"));
+    });
+  }
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", function () {
+      setSidebarCollapsed(!body.classList.contains("sidebar-collapsed"));
+    });
+  }
+  if (densityToggle) {
+    densityToggle.addEventListener("click", function () {
+      setCompactDensity(!body.classList.contains("compact-density"));
     });
   }
 
@@ -163,6 +204,17 @@
     counterEls.forEach((el) => animateCount(el));
   }
 
+  function initKpiRings() {
+    const rings = document.querySelectorAll("[data-kpi-pct]");
+    rings.forEach((ring) => {
+      const pct = Number(ring.getAttribute("data-kpi-pct"));
+      if (!Number.isNaN(pct)) {
+        const safePct = Math.max(0, Math.min(100, pct));
+        ring.style.setProperty("--pct", String(safePct));
+      }
+    });
+  }
+
   const tourSteps = [
     {
       selector: "#tour-sidebar",
@@ -249,8 +301,19 @@
   if (localStorage.getItem(presentationKey) === "1") {
     setPresentationMode(true);
   }
+  if (localStorage.getItem(sidebarKey) === "1") {
+    setSidebarCollapsed(true);
+  } else {
+    setSidebarCollapsed(false);
+  }
+  if (localStorage.getItem(densityKey) === "1") {
+    setCompactDensity(true);
+  } else {
+    setCompactDensity(false);
+  }
   applyTenantBranding();
   applyTenantLogo();
   initCounters();
+  initKpiRings();
 })();
 

@@ -40,7 +40,7 @@
         <div class="kpi-head"><h3 class="kpi-title">Average Score</h3><span class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></span></div>
         <p class="kpi-value kpi-count" {% if avg_score is not none %}data-count-to="{{ avg_score }}" data-count-decimals="1"{% endif %}>{{ avg_score if avg_score is not none else "-" }}</p>
         {% if avg_score is not none %}
-        <div class="kpi-ring" style="--pct: {{ avg_score|round(0) }}; --ring-color: #5ea1ff;">
+        <div class="kpi-ring is-accent" data-kpi-pct="{{ avg_score|round(0) }}">
             <span class="kpi-ring-value">{{ avg_score|round(0) }}%</span>
         </div>
         {% endif %}
@@ -71,7 +71,7 @@
             {% if cap_pct > 100 %}{% set cap_pct = 100 %}{% endif %}
         {% endif %}
         <p class="kpi-value kpi-count" data-count-to="{{ usage.active_members }}">{{ usage.active_members }}</p>
-        <div class="kpi-ring" style="--pct: {{ cap_pct }}; --ring-color: #7b61ff;">
+        <div class="kpi-ring is-accent-2" data-kpi-pct="{{ cap_pct }}">
             <span class="kpi-ring-value">{{ cap_pct }}%</span>
         </div>
         <p>

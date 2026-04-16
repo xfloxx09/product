@@ -41,10 +41,10 @@
                             <td class="truncate">{{ invite_links.get(invite.id) }}</td>
                             <td>
                                 <form method="post" action="{{ url_for('auth.resend_invite', invite_id=invite.id) }}" class="inline-form">
-                                    <button class="btn btn-secondary" type="submit">Resend</button>
+                                    <button class="btn btn-secondary" type="submit"><i class="bi bi-send"></i> Resend</button>
                                 </form>
                                 <form method="post" action="{{ url_for('auth.revoke_invite', invite_id=invite.id) }}" class="inline-form">
-                                    <button class="btn btn-secondary" type="submit">Revoke</button>
+                                    <button class="btn btn-secondary" type="submit"><i class="bi bi-x-circle"></i> Revoke</button>
                                 </form>
                             </td>
                         </tr>
@@ -52,7 +52,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No active invites.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-envelope-open"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-envelope-open"></i> No active invites</h4>
+                <p>All invite links are currently resolved. New governance invites will appear here.</p>
+            </div>
         {% endif %}
     </article>
 </section>

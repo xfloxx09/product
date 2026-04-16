@@ -43,7 +43,11 @@
             {% endfor %}
             <p>Signature header name configured on source: <strong>{{ signature_header }}</strong></p>
         {% else %}
-            <p>No signing secret configured. Add a webhook signing secret in source settings to generate signed samples.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-key"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-key"></i> No signing secret configured</h4>
+                <p>Add a webhook signing secret in source settings to generate verifiable signed samples.</p>
+            </div>
         {% endif %}
     </article>
 

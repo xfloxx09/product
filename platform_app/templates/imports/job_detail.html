@@ -10,7 +10,20 @@
         <tbody>
             <tr><th>File</th><td>{{ job.source_filename }}</td></tr>
             <tr><th>Run mode</th><td>{{ job.run_mode }}</td></tr>
-            <tr><th>Status</th><td>{{ job.status }}</td></tr>
+            <tr>
+                <th>Status</th>
+                <td>
+                    {% set import_job_status_class = "is-neutral" %}
+                    {% if job.status in ["failed", "error"] %}
+                        {% set import_job_status_class = "is-danger" %}
+                    {% elif job.status in ["running", "queued"] %}
+                        {% set import_job_status_class = "is-warning" %}
+                    {% elif job.status in ["completed", "success"] %}
+                        {% set import_job_status_class = "is-success" %}
+                    {% endif %}
+                    <span class="status-badge {{ import_job_status_class }}">{{ job.status }}</span>
+                </td>
+            </tr>
             <tr><th>Total rows</th><td>{{ job.total_rows }}</td></tr>
             <tr><th>Success rows</th><td>{{ job.success_rows }}</td></tr>
             <tr><th>Failed rows</th><td>{{ job.failed_rows }}</td></tr>
@@ -46,7 +59,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No row errors.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-check2-all"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-check2-all"></i> No row errors</h4>
+            <p>This import ran cleanly without row-level validation failures.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

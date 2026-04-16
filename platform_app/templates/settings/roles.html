@@ -24,7 +24,7 @@
                 {% endfor %}
             </div>
 
-            <button class="btn btn-primary" type="submit">Create / Update Role</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-shield-plus"></i> Create / Update Role</button>
         </form>
     </article>
 
@@ -43,10 +43,10 @@
                             <td>{{ role.permissions|join(", ") if role.permissions else "-" }}</td>
                             <td>
                                 {% if role.role_key not in ["owner", "admin", "manager", "coach", "viewer"] %}
-                                    <form method="post" style="display:inline;">
+                                    <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="role_key" value="{{ role.role_key }}">
-                                        <button class="btn btn-secondary" type="submit">Delete</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-trash3"></i> Delete</button>
                                     </form>
                                 {% else %}
                                     <small>system role</small>
@@ -57,7 +57,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No roles configured.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-shield"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-shield"></i> No custom roles configured</h4>
+                <p>Create role packs to align permissions with your enterprise operating model.</p>
+            </div>
         {% endif %}
     </article>
 </section>

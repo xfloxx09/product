@@ -40,9 +40,10 @@ body {
     margin: 0;
     font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
     background:
-        radial-gradient(1000px 400px at 10% -20%, rgba(94, 161, 255, 0.2), transparent 55%),
-        radial-gradient(900px 400px at 110% 20%, rgba(123, 97, 255, 0.22), transparent 60%),
-        linear-gradient(180deg, #070d1f 0%, var(--bg) 48%, #060a15 100%);
+        radial-gradient(1000px 420px at 10% -20%, rgba(94, 161, 255, 0.2), transparent 55%),
+        radial-gradient(900px 420px at 110% 20%, rgba(123, 97, 255, 0.22), transparent 60%),
+        linear-gradient(180deg, #070d1f 0%, var(--bg) 100%);
+    background-attachment: fixed;
     color: var(--text);
     letter-spacing: 0.01em;
 }
@@ -153,6 +154,22 @@ body {
     box-shadow: var(--shadow-strong);
 }
 
+.card h1,
+.card h2,
+.card h3 {
+    margin: 0 0 .6rem;
+    letter-spacing: 0.01em;
+}
+
+.card p {
+    margin: .42rem 0;
+    line-height: 1.5;
+}
+
+.card p:last-child {
+    margin-bottom: 0;
+}
+
 .btn {
     display: inline-block;
     text-decoration: none;
@@ -199,6 +216,12 @@ label {
     color: #d9e5ff;
     font-weight: 500;
     font-size: .92rem;
+}
+
+.inline-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
 }
 
 small {
@@ -256,6 +279,7 @@ input:focus, select:focus, textarea:focus {
     border-bottom: 1px solid var(--border);
     padding: .8rem .55rem;
     vertical-align: top;
+    overflow-wrap: anywhere;
 }
 
 .table-like th {
@@ -267,6 +291,23 @@ input:focus, select:focus, textarea:focus {
 
 .table-like tbody tr:hover {
     background: rgba(94, 161, 255, 0.06);
+}
+
+.table-scroll {
+    overflow: auto;
+}
+
+body.compact-density .table-like {
+    font-size: .88rem;
+}
+
+body.compact-density .table-like th,
+body.compact-density .table-like td {
+    padding: .56rem .45rem;
+}
+
+body.compact-density .table-like th {
+    font-size: .74rem;
 }
 
 .truncate {
@@ -311,10 +352,24 @@ a:hover {
     color: #b2d7ff;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid rgba(138, 196, 255, 0.9);
+    outline-offset: 2px;
+}
+
 .app-shell {
     min-height: 100vh;
     display: grid;
     grid-template-columns: 280px 1fr;
+    transition: grid-template-columns .2s ease;
+}
+
+body.sidebar-collapsed .app-shell {
+    grid-template-columns: 88px 1fr;
 }
 
 body.presentation-mode .app-shell {
@@ -335,11 +390,37 @@ body.presentation-mode .app-main {
     background: linear-gradient(180deg, #0f1730 0%, #0b1224 42%, #090f1d 100%);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 1.5rem;
     position: sticky;
     top: 0;
     height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    transition: padding .2s ease;
+}
+
+.app-sidebar form {
+    margin-top: auto;
+}
+
+.app-sidebar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.app-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 999px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(138, 196, 255, 0.3);
+    border-radius: 999px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(138, 196, 255, 0.45);
 }
 
 .brand-sidebar {
@@ -447,6 +528,32 @@ body.presentation-mode .app-main {
     color: #9fc0ff;
 }
 
+body.sidebar-collapsed .app-sidebar {
+    padding: 1.1rem .65rem;
+}
+
+body.sidebar-collapsed .sidebar-kicker,
+body.sidebar-collapsed .workspace-chip,
+body.sidebar-collapsed .nav-group-label,
+body.sidebar-collapsed .sidebar-nav a span {
+    display: none;
+}
+
+body.sidebar-collapsed .brand-sidebar {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0;
+}
+
+body.sidebar-collapsed .sidebar-nav a {
+    justify-content: center;
+    padding: .68rem .5rem;
+}
+
+body.sidebar-collapsed .sidebar-nav a i {
+    font-size: 1.05rem;
+}
+
 .app-main {
     padding: 1.45rem 1.65rem 2.5rem;
 }
@@ -522,6 +629,10 @@ body.presentation-mode .app-main {
 .section-head h2,
 .section-head h3 {
     margin: 0;
+}
+
+.section-head p {
+    margin: .3rem 0 0;
 }
 
 .metric {
@@ -607,6 +718,7 @@ body.presentation-mode .app-main {
     display: inline-flex;
     align-items: center;
     gap: .5rem;
+    margin-bottom: .35rem;
 }
 
 .status-badge {
@@ -660,6 +772,14 @@ body.presentation-mode .app-main {
         conic-gradient(var(--ring-color) calc(var(--pct) * 1%), rgba(138, 196, 255, 0.14) 0);
     border: 1px solid rgba(138, 196, 255, 0.24);
     box-shadow: inset 0 0 0 1px rgba(138, 196, 255, 0.1);
+}
+
+.kpi-ring.is-accent {
+    --ring-color: #5ea1ff;
+}
+
+.kpi-ring.is-accent-2 {
+    --ring-color: #7b61ff;
 }
 
 .kpi-ring-value {
@@ -907,14 +1027,65 @@ body.theme-light .sticky-actions {
     font-weight: 800;
 }
 
+@media (max-width: 1360px) {
+    .app-shell {
+        grid-template-columns: 252px 1fr;
+    }
+
+    body.sidebar-collapsed .app-shell {
+        grid-template-columns: 84px 1fr;
+    }
+
+    .app-main {
+        padding: 1.1rem 1.2rem 2rem;
+    }
+
+    .topbar {
+        padding: .9rem 1rem;
+    }
+
+    .page-title {
+        font-size: 1.72rem;
+    }
+
+    .kpi-value {
+        font-size: 1.52rem;
+    }
+}
+
 .kpi-meta {
     margin: 0;
     color: var(--muted);
     font-size: .86rem;
 }
 
+.u-mt-12 {
+    margin-top: 12px;
+}
+
+.u-mb-12 {
+    margin-bottom: 12px;
+}
+
+.w-90 {
+    width: 90px;
+}
+
+.w-auto {
+    width: auto;
+}
+
+.scope-select {
+    min-width: 240px;
+    max-width: 420px;
+}
+
 @media (max-width: 1100px) {
     .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    body.sidebar-collapsed .app-shell {
         grid-template-columns: 1fr;
     }
 
@@ -923,11 +1094,28 @@ body.theme-light .sticky-actions {
         height: auto;
         border-right: 0;
         border-bottom: 1px solid var(--border);
+        overflow: visible;
     }
 
     .split-grid,
     .three-up {
         grid-template-columns: 1fr;
+    }
+
+    body.sidebar-collapsed .sidebar-kicker,
+    body.sidebar-collapsed .workspace-chip,
+    body.sidebar-collapsed .nav-group-label,
+    body.sidebar-collapsed .sidebar-nav a span {
+        display: initial;
+    }
+
+    body.sidebar-collapsed .brand-sidebar {
+        justify-content: flex-start;
+    }
+
+    body.sidebar-collapsed .sidebar-nav a {
+        justify-content: flex-start;
+        padding: .72rem .8rem;
     }
 }
 

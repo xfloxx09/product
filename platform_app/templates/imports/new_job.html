@@ -54,7 +54,17 @@
                         <td>{{ job.id }}</td>
                         <td>{{ job.run_mode }}</td>
                         <td>{{ job.source_filename }}</td>
-                        <td>{{ job.status }}</td>
+                        <td>
+                            {% set import_status_class = "is-neutral" %}
+                            {% if job.status in ["failed", "error"] %}
+                                {% set import_status_class = "is-danger" %}
+                            {% elif job.status in ["running", "queued"] %}
+                                {% set import_status_class = "is-warning" %}
+                            {% elif job.status in ["completed", "success"] %}
+                                {% set import_status_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ import_status_class }}">{{ job.status }}</span>
+                        </td>
                         <td>{{ job.success_rows }}/{{ job.total_rows }}</td>
                         <td><a href="{{ url_for('imports.job_detail', job_id=job.id, tenant=tenant.slug) }}">Details</a></td>
                     </tr>
@@ -62,7 +72,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No import jobs yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-upload"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-upload"></i> No import jobs yet</h4>
+            <p>Upload your first CSV file to validate mappings and populate coaching records.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

@@ -55,7 +55,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No failing sources in the selected window.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-check2-circle"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-check2-circle"></i> No failing sources</h4>
+            <p>All monitored sources are currently healthy in the selected analytics window.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -84,7 +88,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No alert events in the trend window.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-graph-up"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-graph-up"></i> No alert trend data</h4>
+            <p>No alert events were captured for this period, so trend analysis is empty.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -101,16 +109,42 @@
                         <td>{{ row.created_at }}</td>
                         <td>{{ row.source_name }}</td>
                         <td>{{ row.trigger_type }}</td>
-                        <td>{{ row.health_status }}</td>
-                        <td>{{ row.sent_email }}</td>
-                        <td>{{ row.sent_webhook }}</td>
+                        <td>
+                            {% set health_badge_class = "is-neutral" %}
+                            {% if row.health_status == "unhealthy" %}
+                                {% set health_badge_class = "is-danger" %}
+                            {% elif row.health_status == "degraded" %}
+                                {% set health_badge_class = "is-warning" %}
+                            {% elif row.health_status == "healthy" %}
+                                {% set health_badge_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ health_badge_class }}">{{ row.health_status }}</span>
+                        </td>
+                        <td>
+                            {% if row.sent_email %}
+                                <span class="status-badge is-success">sent</span>
+                            {% else %}
+                                <span class="status-badge is-neutral">not sent</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.sent_webhook %}
+                                <span class="status-badge is-success">sent</span>
+                            {% else %}
+                                <span class="status-badge is-neutral">not sent</span>
+                            {% endif %}
+                        </td>
                         <td>{{ row.error_message or "-" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No failed deliveries in the selected window.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-shield-check"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-shield-check"></i> No failed deliveries</h4>
+            <p>Alert delivery attempts completed successfully during this period.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

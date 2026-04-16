@@ -12,21 +12,25 @@
 </section>
 
 <section class="grid">
-    <article class="card">
-        <h3>Active Members</h3>
-        <p>{{ active_agents|length }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Active Members</h3><span class="kpi-icon"><i class="bi bi-person-check"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ active_agents|length }}">{{ active_agents|length }}</p>
+        <p class="kpi-meta">Currently active workforce in this team</p>
     </article>
-    <article class="card">
-        <h3>Total Members</h3>
-        <p>{{ agents|length }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Total Members</h3><span class="kpi-icon"><i class="bi bi-people"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ agents|length }}">{{ agents|length }}</p>
+        <p class="kpi-meta">Headcount mapped to this operating unit</p>
     </article>
-    <article class="card">
-        <h3>Sessions</h3>
-        <p>{{ total_sessions }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Sessions</h3><span class="kpi-icon"><i class="bi bi-journal-check"></i></span></div>
+        <p class="kpi-value kpi-count" data-count-to="{{ total_sessions }}">{{ total_sessions }}</p>
+        <p class="kpi-meta">Logged coaching interactions</p>
     </article>
-    <article class="card">
-        <h3>Avg Score</h3>
-        <p>{{ avg_score if avg_score is not none else "-" }}</p>
+    <article class="card kpi-card">
+        <div class="kpi-head"><h3 class="kpi-title">Avg Score</h3><span class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></span></div>
+        <p class="kpi-value kpi-count" {% if avg_score is not none %}data-count-to="{{ avg_score }}" data-count-decimals="1"{% endif %}>{{ avg_score if avg_score is not none else "-" }}</p>
+        <p class="kpi-meta">Current quality baseline for the team</p>
     </article>
 </section>
 
@@ -42,13 +46,25 @@
                     <tr>
                         <td>{{ agent.full_name }}</td>
                         <td>{{ agent.employee_code }}</td>
-                        <td>{{ agent.status }}</td>
+                        <td>
+                            {% set team_member_status_class = "is-neutral" %}
+                            {% if agent.status == "active" %}
+                                {% set team_member_status_class = "is-success" %}
+                            {% elif agent.status == "inactive" %}
+                                {% set team_member_status_class = "is-warning" %}
+                            {% endif %}
+                            <span class="status-badge {{ team_member_status_class }}">{{ agent.status }}</span>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No team members yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-people"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-people"></i> No team members yet</h4>
+            <p>Add members to this team to unlock SLA and quality tracking views.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -67,7 +83,15 @@
                         <td>{{ row.last_session_at or "-" }}</td>
                         <td>{{ row.due_at or "-" }}</td>
                         <td>
-                            {{ row.status }}
+                            {% set sla_status_class = "is-neutral" %}
+                            {% if row.status in ["on_track", "healthy"] %}
+                                {% set sla_status_class = "is-success" %}
+                            {% elif row.status in ["due_soon", "warning"] %}
+                                {% set sla_status_class = "is-warning" %}
+                            {% elif row.status in ["overdue", "missed"] %}
+                                {% set sla_status_class = "is-danger" %}
+                            {% endif %}
+                            <span class="status-badge {{ sla_status_class }}">{{ row.status }}</span>
                             {% if row.overdue_days %}
                                 ({{ row.overdue_days }}d)
                             {% endif %}
@@ -77,7 +101,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No SLA rows available.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-alarm"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-alarm"></i> No SLA rows available</h4>
+            <p>Set coaching cadence and log sessions to generate SLA obligations.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -95,13 +123,27 @@
                         <td>{{ row.recent_avg if row.recent_avg is not none else "-" }}</td>
                         <td>{{ row.baseline_avg if row.baseline_avg is not none else "-" }}</td>
                         <td>{{ row.trend_delta if row.trend_delta is not none else "-" }}</td>
-                        <td>{{ row.risk_status }}</td>
+                        <td>
+                            {% set risk_status_class = "is-neutral" %}
+                            {% if row.risk_status in ["critical", "high_risk"] %}
+                                {% set risk_status_class = "is-danger" %}
+                            {% elif row.risk_status in ["declining", "watch"] %}
+                                {% set risk_status_class = "is-warning" %}
+                            {% elif row.risk_status in ["stable", "improving"] %}
+                                {% set risk_status_class = "is-success" %}
+                            {% endif %}
+                            <span class="status-badge {{ risk_status_class }}">{{ row.risk_status }}</span>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No quality trend signals yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-activity"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-activity"></i> No quality trend signals yet</h4>
+            <p>More session history is needed before trend and risk scoring can be computed.</p>
+        </div>
     {% endif %}
 </section>
 
@@ -125,7 +167,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No sessions for this team yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-journal-x"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-journal-x"></i> No sessions for this team yet</h4>
+            <p>Start coaching sessions to build a usable quality and SLA history.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

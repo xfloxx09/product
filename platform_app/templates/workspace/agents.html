@@ -53,12 +53,20 @@
                             <td>{{ agent.full_name }}</td>
                             <td>{{ agent.employee_code }}</td>
                             <td>{{ agent.team.name if agent.team else "-" }}</td>
-                            <td>{{ agent.status }}</td>
+                            <td>
+                                {% set agent_status_class = "is-neutral" %}
+                                {% if agent.status == "active" %}
+                                    {% set agent_status_class = "is-success" %}
+                                {% elif agent.status == "inactive" %}
+                                    {% set agent_status_class = "is-warning" %}
+                                {% endif %}
+                                <span class="status-badge {{ agent_status_class }}">{{ agent.status }}</span>
+                            </td>
                             <td>
                                 <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="set_cadence">
                                     <input type="hidden" name="agent_id" value="{{ agent.id }}">
-                                    <input type="number" name="cadence_days" min="1" value="{{ cadence.cadence_days if cadence else 30 }}" style="width:90px;">
+                                    <input class="w-90" type="number" name="cadence_days" min="1" value="{{ cadence.cadence_days if cadence else 30 }}">
                                     <button class="btn btn-secondary" type="submit"><i class="bi bi-check2"></i> Set</button>
                                 </form>
                             </td>
@@ -84,7 +92,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No agents yet.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-person-badge"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-person-badge"></i> No agents yet</h4>
+                <p>Add members to start coaching cadence automation and performance visibility.</p>
+            </div>
         {% endif %}
     </article>
 </section>

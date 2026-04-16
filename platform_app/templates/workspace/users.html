@@ -45,22 +45,22 @@
                                 <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="change_role">
                                     <input type="hidden" name="user_id" value="{{ user.id }}">
-                                    <select name="new_role" style="width:auto;">
+                                    <select class="w-auto" name="new_role">
                                         {% for role_key, role_label in role_options %}
                                             <option value="{{ role_key }}" {% if role_key == user.role %}selected{% endif %}>{{ role_label }}</option>
                                         {% endfor %}
                                     </select>
-                                    <button class="btn btn-secondary" type="submit">Set role</button>
+                                    <button class="btn btn-secondary" type="submit"><i class="bi bi-shield-check"></i> Set role</button>
                                 </form>
                                 <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="toggle_active">
                                     <input type="hidden" name="user_id" value="{{ user.id }}">
                                     {% if user.is_active %}
                                         <input type="hidden" name="desired_active" value="0">
-                                        <button class="btn btn-secondary" type="submit">Deactivate</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-person-dash"></i> Deactivate</button>
                                     {% else %}
                                         <input type="hidden" name="desired_active" value="1">
-                                        <button class="btn btn-secondary" type="submit">Activate</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-person-check"></i> Activate</button>
                                     {% endif %}
                                 </form>
                             </td>
@@ -71,20 +71,20 @@
                                     <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="set_team_scope">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <label style="display:inline;">Delegated teams:</label>
-                                        <select name="scope_team_ids" multiple style="min-width:240px; max-width:420px;">
+                                        <label class="inline-label">Delegated teams:</label>
+                                        <select class="scope-select" name="scope_team_ids" multiple>
                                             {% for team in teams %}
                                                 <option value="{{ team.id }}" {% if team.id in scoped_ids %}selected{% endif %}>
                                                     {{ team.name }}
                                                 </option>
                                             {% endfor %}
                                         </select>
-                                        <button class="btn btn-secondary" type="submit">Apply team scope</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-funnel"></i> Apply team scope</button>
                                     </form>
                                     <form method="post" class="inline-form">
                                         <input type="hidden" name="action" value="clear_team_scope">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <button class="btn btn-secondary" type="submit">Grant all teams</button>
+                                        <button class="btn btn-secondary" type="submit"><i class="bi bi-globe2"></i> Grant all teams</button>
                                     </form>
                                 </td>
                             </tr>
@@ -93,7 +93,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No users found.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-people"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-people"></i> No users found</h4>
+                <p>Invite your first user to start delegated governance and role-based operations.</p>
+            </div>
         {% endif %}
     </article>
     <article class="card">
@@ -119,7 +123,11 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No pending invites.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-envelope-check"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-envelope-check"></i> No pending invites</h4>
+                <p>All invitations are currently resolved. New invites will appear here.</p>
+            </div>
         {% endif %}
     </article>
 </section>

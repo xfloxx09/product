@@ -32,7 +32,7 @@
             <input type="hidden" name="action" value="test_connection">
             <button class="btn btn-secondary" type="submit"><i class="bi bi-plug"></i> Test Connection</button>
         </form>
-        <form method="post" class="form-card" style="margin-bottom:12px;">
+        <form method="post" class="form-card u-mb-12">
             <input type="hidden" name="action" value="send_test_alert">
             <label>Test alert status</label>
             <select name="test_alert_status">
@@ -41,7 +41,7 @@
             </select>
             <label>Test alert error text</label>
             <input type="text" name="test_alert_error" value="Manual test alert">
-            <button class="btn btn-secondary" type="submit">Send Test Alert</button>
+            <button class="btn btn-secondary" type="submit"><i class="bi bi-bell"></i> Send Test Alert</button>
         </form>
         <p>
             Need receiver-side validation help?
@@ -160,8 +160,8 @@
     <article class="card">
         <h3>Recent Alert Deliveries</h3>
         {% if alert_events %}
-            <div style="overflow:auto;">
-                <table>
+            <div class="table-scroll">
+                <table class="table-like">
                     <thead>
                         <tr>
                             <th>Time</th>
@@ -177,7 +177,17 @@
                             <tr>
                                 <td>{{ event.created_at }}</td>
                                 <td>{{ event.trigger_type }}</td>
-                                <td>{{ event.health_status }}</td>
+                                <td>
+                                    {% set event_health_class = "is-neutral" %}
+                                    {% if event.health_status == "unhealthy" %}
+                                        {% set event_health_class = "is-danger" %}
+                                    {% elif event.health_status == "degraded" %}
+                                        {% set event_health_class = "is-warning" %}
+                                    {% elif event.health_status == "healthy" %}
+                                        {% set event_health_class = "is-success" %}
+                                    {% endif %}
+                                    <span class="status-badge {{ event_health_class }}">{{ event.health_status }}</span>
+                                </td>
                                 <td>
                                     {% if event.delivery_attempted %}
                                         {% if event.delivery_failed %}
@@ -214,7 +224,11 @@
                 </table>
             </div>
         {% else %}
-            <p>No alert events yet for this source.</p>
+            <div class="empty-state">
+                <div class="empty-illustration"><i class="bi bi-bell-slash"></i></div>
+                <h4 class="empty-state-title"><i class="bi bi-bell-slash"></i> No alert events yet</h4>
+                <p>Run connection tests or health checks to generate delivery telemetry for this source.</p>
+            </div>
         {% endif %}
     </article>
 </section>

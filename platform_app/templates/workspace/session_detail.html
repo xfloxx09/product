@@ -45,7 +45,17 @@
                 {% for item in action_items %}
                     <tr>
                         <td>{{ item.title }}</td>
-                        <td>{{ item.status }}</td>
+                        <td>
+                            {% set action_status_class = "is-neutral" %}
+                            {% if item.status == "completed" %}
+                                {% set action_status_class = "is-success" %}
+                            {% elif item.status in ["overdue", "blocked"] %}
+                                {% set action_status_class = "is-danger" %}
+                            {% elif item.status in ["open", "in_progress"] %}
+                                {% set action_status_class = "is-warning" %}
+                            {% endif %}
+                            <span class="status-badge {{ action_status_class }}">{{ item.status }}</span>
+                        </td>
                         <td>{{ item.due_at or "-" }}</td>
                         <td>{{ item.completed_at or "-" }}</td>
                         <td>
@@ -53,14 +63,18 @@
                                 <input type="hidden" name="action" value="toggle_action_status">
                                 <input type="hidden" name="item_id" value="{{ item.id }}">
                                 <button class="btn btn-secondary" type="submit">
-                                    {% if item.status == "completed" %}Reopen{% else %}Complete{% endif %}
+                                    {% if item.status == "completed" %}
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reopen
+                                    {% else %}
+                                        <i class="bi bi-check2-circle"></i> Complete
+                                    {% endif %}
                                 </button>
                             </form>
                             {% if item.status != "completed" %}
                                 <form method="post" class="inline-form">
                                     <input type="hidden" name="action" value="send_reminder">
                                     <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button class="btn btn-secondary" type="submit">Send reminder</button>
+                                    <button class="btn btn-secondary" type="submit"><i class="bi bi-bell"></i> Send reminder</button>
                                 </form>
                             {% endif %}
                         </td>
@@ -69,7 +83,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No action items yet.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-list-check"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-list-check"></i> No action items yet</h4>
+            <p>Add action items to turn coaching outcomes into accountable follow-up steps.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

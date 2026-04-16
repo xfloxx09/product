@@ -20,18 +20,35 @@
     {% if subscription %}
         <table class="table-like">
             <tbody>
-                <tr><th>Status</th><td>{{ subscription.status }}</td></tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        {% set sub_status_class = "is-neutral" %}
+                        {% if subscription.status in ["active", "trialing"] %}
+                            {% set sub_status_class = "is-success" %}
+                        {% elif subscription.status in ["past_due", "unpaid"] %}
+                            {% set sub_status_class = "is-warning" %}
+                        {% elif subscription.status in ["canceled", "incomplete_expired"] %}
+                            {% set sub_status_class = "is-danger" %}
+                        {% endif %}
+                        <span class="status-badge {{ sub_status_class }}">{{ subscription.status }}</span>
+                    </td>
+                </tr>
                 <tr><th>Provider</th><td>{{ subscription.provider }}</td></tr>
                 <tr><th>Customer ID</th><td>{{ subscription.provider_customer_id or "-" }}</td></tr>
                 <tr><th>Subscription ID</th><td>{{ subscription.provider_subscription_id or "-" }}</td></tr>
                 <tr><th>Current period end</th><td>{{ subscription.current_period_end or "-" }}</td></tr>
             </tbody>
         </table>
-        <form method="post" action="{{ url_for('billing.portal_session') }}" style="margin-top:12px;">
+        <form method="post" action="{{ url_for('billing.portal_session') }}" class="u-mt-12">
             <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-up-right-circle"></i> Open Stripe Billing Portal</button>
         </form>
     {% else %}
-        <p>No subscription record found.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-credit-card"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-credit-card"></i> No subscription record found</h4>
+            <p>Complete checkout to activate billing controls and plan lifecycle management.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

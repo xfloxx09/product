@@ -92,16 +92,22 @@
                     <h1 class="page-title">{% block page_title %}{{ self.title()|striptags }}{% endblock %}</h1>
                 </div>
                 <div class="topbar-meta">
-                    <button class="theme-toggle" type="button" data-presentation-toggle>
+                    <button class="theme-toggle" type="button" data-density-toggle title="Enable compact tables" aria-label="Enable compact tables">
+                        <i class="bi bi-table"></i>
+                    </button>
+                    <button class="theme-toggle" type="button" data-sidebar-toggle title="Collapse sidebar" aria-label="Collapse sidebar">
+                        <i class="bi bi-layout-sidebar-inset"></i>
+                    </button>
+                    <button class="theme-toggle" type="button" data-presentation-toggle title="Toggle presentation mode" aria-label="Toggle presentation mode">
                         <i class="bi bi-easel2"></i>
                     </button>
-                    <button class="theme-toggle" type="button" data-logo-open>
+                    <button class="theme-toggle" type="button" data-logo-open title="Workspace logo" aria-label="Workspace logo">
                         <i class="bi bi-image"></i>
                     </button>
-                    <button class="theme-toggle" type="button" data-tour-start>
+                    <button class="theme-toggle" type="button" data-tour-start title="Start product tour" aria-label="Start product tour">
                         <i class="bi bi-mortarboard"></i>
                     </button>
-                    <button class="theme-toggle" type="button" data-theme-toggle>
+                    <button class="theme-toggle" type="button" data-theme-toggle title="Toggle color theme" aria-label="Toggle color theme">
                         <i class="bi bi-moon-stars-fill"></i>
                     </button>
                     <span class="scope-pill">
@@ -176,9 +182,9 @@
                 <input type="url" name="logo_url" placeholder="https://cdn.example.com/logo.svg">
             </label>
             <div class="tour-actions">
-                <button class="btn btn-secondary" type="button" data-logo-clear>Clear</button>
-                <button class="btn btn-secondary" type="button" data-logo-cancel>Cancel</button>
-                <button class="btn btn-primary" type="submit">Save Logo</button>
+                <button class="btn btn-secondary" type="button" data-logo-clear><i class="bi bi-eraser"></i> Clear</button>
+                <button class="btn btn-secondary" type="button" data-logo-cancel><i class="bi bi-x-circle"></i> Cancel</button>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-save2"></i> Save Logo</button>
             </div>
         </form>
     </div>

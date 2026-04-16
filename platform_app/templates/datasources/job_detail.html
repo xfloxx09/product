@@ -10,7 +10,20 @@
         <tbody>
             <tr><th>Data source</th><td>{{ job.data_source.name }}</td></tr>
             <tr><th>Run mode</th><td>{{ job.run_mode }}</td></tr>
-            <tr><th>Status</th><td>{{ job.status }}</td></tr>
+            <tr>
+                <th>Status</th>
+                <td>
+                    {% set sync_job_status_class = "is-neutral" %}
+                    {% if job.status in ["failed", "error"] %}
+                        {% set sync_job_status_class = "is-danger" %}
+                    {% elif job.status in ["running", "queued"] %}
+                        {% set sync_job_status_class = "is-warning" %}
+                    {% elif job.status in ["completed", "success"] %}
+                        {% set sync_job_status_class = "is-success" %}
+                    {% endif %}
+                    <span class="status-badge {{ sync_job_status_class }}">{{ job.status }}</span>
+                </td>
+            </tr>
             <tr><th>Attempt</th><td>{{ job.attempt_count }}</td></tr>
             <tr><th>Started at</th><td>{{ job.started_at or "-" }}</td></tr>
             <tr><th>Finished at</th><td>{{ job.finished_at or "-" }}</td></tr>
@@ -45,7 +58,11 @@
             </tbody>
         </table>
     {% else %}
-        <p>No row errors.</p>
+        <div class="empty-state">
+            <div class="empty-illustration"><i class="bi bi-check2-all"></i></div>
+            <h4 class="empty-state-title"><i class="bi bi-check2-all"></i> No row errors</h4>
+            <p>This sync completed without row-level transformation or ingestion issues.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}
