@@ -190,7 +190,7 @@ class CoachingSession(TimestampMixin, db.Model):
     customer_journey_stage = db.Column(db.String(50), nullable=True)
 
     agent = db.relationship("AgentProfile")
-    coach = db.relationship("TenantUser")
+    coach = db.relationship("TenantUser", foreign_keys=[coach_user_id])
     assigned_by = db.relationship("TenantUser", foreign_keys=[assigned_by_user_id])
     coaching_case = db.relationship("CoachingCase")
     policy_pack = db.relationship("PolicyPack")
