@@ -7,15 +7,17 @@
 <a class="btn btn-primary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-calendar3"></i> Open calendar</a>
 {% endblock %}
 {% block content %}
-<section class="split-grid">
-    <article class="card">
-        <div class="section-head">
-            <div>
-                <h2>Plan or log coaching session</h2>
-                <p class="muted">Create planned sessions for manager assignment, or mark execution as completed right away.</p>
-            </div>
+{% set planned_in_view = sessions|selectattr("status", "equalto", "planned")|list|length %}
+{% set completed_in_view = sessions|selectattr("status", "equalto", "completed")|list|length %}
+{% set workshops_in_view = sessions|selectattr("session_format", "equalto", "workshop")|list|length %}
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>Plan or log coaching session</h2>
+            <p class="muted">Create planned sessions for manager assignment, or mark execution as completed right away.</p>
         </div>
-        <form method="post" class="stack">
+    </div>
+    <form method="post" class="stack">
             <label>Member
                 <select name="agent_id" required>
                     {% for agent in agents %}
@@ -104,15 +106,22 @@
                 <input type="date" name="action_due_at">
             </label>
 
-            <button class="btn btn-primary" type="submit"><i class="bi bi-save2"></i> Save session</button>
-        </form>
-    </article>
-
-    <article class="card metric kpi-card">
-        <div class="kpi-head"><span class="metric-label">Recent sessions loaded</span><span class="kpi-icon"><i class="bi bi-clock-history"></i></span></div>
-        <span class="metric-value">{{ sessions|length }}</span>
-        <span class="muted">Most recent execution records in scope.</span>
-    </article>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-save2"></i> Save session</button>
+    </form>
+    <div class="session-quick-stats">
+        <article class="session-quick-stat">
+            <small>Loaded in view</small>
+            <strong>{{ sessions|length }}</strong>
+        </article>
+        <article class="session-quick-stat">
+            <small>Planned / completed</small>
+            <strong>{{ planned_in_view }} / {{ completed_in_view }}</strong>
+        </article>
+        <article class="session-quick-stat">
+            <small>Workshops in view</small>
+            <strong>{{ workshops_in_view }}</strong>
+        </article>
+    </div>
 </section>
 
 <section class="card">

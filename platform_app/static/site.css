@@ -1059,6 +1059,33 @@ body.theme-light .sticky-actions {
     font-size: .86rem;
 }
 
+.session-quick-stats {
+    margin-top: .95rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .65rem;
+}
+
+.session-quick-stat {
+    border: 1px solid rgba(138, 196, 255, 0.24);
+    background: rgba(94, 161, 255, 0.07);
+    border-radius: 12px;
+    padding: .55rem .7rem;
+    display: grid;
+    gap: .2rem;
+}
+
+.session-quick-stat small {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    font-size: .7rem;
+}
+
+.session-quick-stat strong {
+    font-size: 1.05rem;
+}
+
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1284,6 +1311,10 @@ body.theme-light .sticky-actions {
 
     .schedule-modal-body {
         max-height: calc(100vh - 10.5rem);
+    }
+
+    .session-quick-stats {
+        grid-template-columns: 1fr;
     }
 }
 
