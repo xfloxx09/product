@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Coaching Ops - CoachingOS{% endblock %}
 {% block page_eyebrow %}Coaching Ops{% endblock %}
-{% block page_title %}Operating Hub{% endblock %}
+{% block page_title %}{{ tr('ops.page_title', 'Operating Hub') }}{% endblock %}
 {% block page_actions %}
 <a class="btn btn-primary" href="#new-case"><i class="bi bi-plus-circle"></i> Create case</a>
 {% endblock %}
@@ -28,7 +28,7 @@
     <article class="card">
         <div class="section-head">
             <div>
-                <h2>Workflow queue</h2>
+                <h2>{{ tr('ops.workflow_queue', 'Workflow queue') }}</h2>
                 <p class="muted">Canonical cases replacing one-off assignment-first coaching.</p>
             </div>
         </div>
@@ -80,7 +80,7 @@
     <article class="card" id="new-case">
         <div class="section-head">
             <div>
-                <h2>Create planned case</h2>
+                <h2>{{ tr('ops.create_case', 'Create planned case') }}</h2>
                 <p class="muted">Use for manager-assigned, recurring, or follow-up coaching.</p>
             </div>
         </div>
@@ -156,7 +156,7 @@
     <article class="card">
         <div class="section-head">
             <div>
-                <h2>Completed sessions</h2>
+                <h2>{{ tr('ops.completed_sessions', 'Completed sessions') }}</h2>
                 <p class="muted">Execution records linked back into workflow cases.</p>
             </div>
             <a href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}">Open all</a>
@@ -190,7 +190,7 @@
     <article class="card">
         <div class="section-head">
             <div>
-                <h2>Open follow-up actions</h2>
+                <h2>{{ tr('ops.open_actions', 'Open follow-up actions') }}</h2>
                 <p class="muted">Cross-case follow through for owners and managers.</p>
             </div>
             <a href="{{ url_for('workspace.action_dashboard', tenant=tenant.slug) }}">Open all</a>

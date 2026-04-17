@@ -29,60 +29,60 @@
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-group">
-                    <div class="nav-group-label">Overview</div>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.dashboard' else '' }}" href="{{ url_for('workspace.dashboard') }}"><i class="bi bi-grid-1x2"></i><span>Executive overview</span></a>
+                    <div class="nav-group-label">{{ tr('nav.overview', 'Overview') }}</div>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.dashboard' else '' }}" href="{{ url_for('workspace.dashboard') }}"><i class="bi bi-grid-1x2"></i><span>{{ tr('nav.executive_overview', 'Executive overview') }}</span></a>
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">Coaching Ops</div>
+                    <div class="nav-group-label">{{ tr('nav.coaching_ops', 'Coaching Ops') }}</div>
                     {% if has_permission('workspace.view') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_ops_hub' else '' }}" href="{{ url_for('workspace.coaching_ops_hub', tenant=current_user.tenant.slug) }}"><i class="bi bi-diagram-3"></i><span>Ops hub</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.quality_insights_dashboard' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-graph-up-arrow"></i><span>Quality insights</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_sla_dashboard' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-alarm"></i><span>SLA board</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_ops_hub' else '' }}" href="{{ url_for('workspace.coaching_ops_hub', tenant=current_user.tenant.slug) }}"><i class="bi bi-diagram-3"></i><span>{{ tr('nav.ops_hub', 'Ops hub') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.quality_insights_dashboard' else '' }}" href="{{ url_for('workspace.quality_insights_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-graph-up-arrow"></i><span>{{ tr('nav.quality_insights', 'Quality insights') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_sla_dashboard' else '' }}" href="{{ url_for('workspace.coaching_sla_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-alarm"></i><span>{{ tr('nav.sla_board', 'SLA board') }}</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_sessions') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}"><i class="bi bi-journal-check"></i><span>Completed sessions</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_calendar' else '' }}" href="{{ url_for('workspace.coaching_calendar', tenant=current_user.tenant.slug) }}"><i class="bi bi-calendar3"></i><span>Coaching calendar</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-list-check"></i><span>Follow-up actions</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}"><i class="bi bi-journal-check"></i><span>{{ tr('nav.completed_sessions', 'Completed sessions') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_calendar' else '' }}" href="{{ url_for('workspace.coaching_calendar', tenant=current_user.tenant.slug) }}"><i class="bi bi-calendar3"></i><span>{{ tr('nav.coaching_calendar', 'Coaching calendar') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-list-check"></i><span>{{ tr('nav.follow_up_actions', 'Follow-up actions') }}</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">People</div>
+                    <div class="nav-group-label">{{ tr('nav.people', 'People') }}</div>
                     {% if has_permission('workspace.manage_agents') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_agents' else '' }}" href="{{ url_for('workspace.manage_agents') }}"><i class="bi bi-person-badge"></i><span>Members</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_agents' else '' }}" href="{{ url_for('workspace.manage_agents') }}"><i class="bi bi-person-badge"></i><span>{{ tr('nav.members', 'Members') }}</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_teams') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_teams' else '' }}" href="{{ url_for('workspace.manage_teams') }}"><i class="bi bi-people"></i><span>Teams</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_teams' else '' }}" href="{{ url_for('workspace.manage_teams') }}"><i class="bi bi-people"></i><span>{{ tr('nav.teams', 'Teams') }}</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">Governance</div>
+                    <div class="nav-group-label">{{ tr('nav.governance', 'Governance') }}</div>
                     {% if has_permission('workspace.manage_users') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_users' else '' }}" href="{{ url_for('workspace.manage_users') }}"><i class="bi bi-shield-lock"></i><span>Users and access</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'auth.invite_user' else '' }}" href="{{ url_for('auth.invite_user') }}"><i class="bi bi-envelope-plus"></i><span>Invitations</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_users' else '' }}" href="{{ url_for('workspace.manage_users') }}"><i class="bi bi-shield-lock"></i><span>{{ tr('nav.users_access', 'Users and access') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'auth.invite_user' else '' }}" href="{{ url_for('auth.invite_user') }}"><i class="bi bi-envelope-plus"></i><span>{{ tr('nav.invitations', 'Invitations') }}</span></a>
                     {% endif %}
                     {% if has_permission('settings.manage') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('settings.') else '' }}" href="{{ url_for('settings.workspace_settings') }}"><i class="bi bi-sliders"></i><span>Settings</span></a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('settings.') else '' }}" href="{{ url_for('settings.workspace_settings') }}"><i class="bi bi-sliders"></i><span>{{ tr('nav.settings', 'Settings') }}</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">Integrations</div>
+                    <div class="nav-group-label">{{ tr('nav.integrations', 'Integrations') }}</div>
                     {% if has_permission('workspace.manage_imports') %}
-                    <a class="{{ 'is-active' if request.endpoint == 'imports.mapper' else '' }}" href="{{ url_for('imports.mapper', tenant=current_user.tenant.slug) }}"><i class="bi bi-columns-gap"></i><span>CSV mapper</span></a>
-                    <a class="{{ 'is-active' if request.endpoint == 'imports.new_job' else '' }}" href="{{ url_for('imports.new_job', tenant=current_user.tenant.slug) }}"><i class="bi bi-upload"></i><span>Imports</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.mapper' else '' }}" href="{{ url_for('imports.mapper', tenant=current_user.tenant.slug) }}"><i class="bi bi-columns-gap"></i><span>{{ tr('nav.csv_mapper', 'CSV mapper') }}</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'imports.new_job' else '' }}" href="{{ url_for('imports.new_job', tenant=current_user.tenant.slug) }}"><i class="bi bi-upload"></i><span>{{ tr('nav.imports', 'Imports') }}</span></a>
                     {% endif %}
                     {% if has_permission('workspace.manage_integrations') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('datasources.') else '' }}" href="{{ url_for('datasources.list_sources', tenant=current_user.tenant.slug) }}"><i class="bi bi-plug"></i><span>Data sources</span></a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('datasources.') else '' }}" href="{{ url_for('datasources.list_sources', tenant=current_user.tenant.slug) }}"><i class="bi bi-plug"></i><span>{{ tr('nav.data_sources', 'Data sources') }}</span></a>
                     {% endif %}
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">Billing</div>
+                    <div class="nav-group-label">{{ tr('nav.billing', 'Billing') }}</div>
                     {% if has_permission('billing.manage') %}
-                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('billing.') else '' }}" href="{{ url_for('billing.billing_portal') }}"><i class="bi bi-credit-card-2-front"></i><span>Plan and billing</span></a>
+                    <a class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('billing.') else '' }}" href="{{ url_for('billing.billing_portal') }}"><i class="bi bi-credit-card-2-front"></i><span>{{ tr('nav.plan_billing', 'Plan and billing') }}</span></a>
                     {% endif %}
                 </div>
             </nav>
             <form method="post" action="{{ url_for('auth.logout') }}">
-                <button class="btn btn-secondary btn-block" type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                <button class="btn btn-secondary btn-block" type="submit"><i class="bi bi-box-arrow-right"></i> {{ tr('common.logout', 'Logout') }}</button>
             </form>
         </aside>
 
@@ -113,7 +113,7 @@
                     </button>
                     <span class="scope-pill">
                         {% if current_user.tenant %}
-                            Scope: {{ current_user.tenant.slug }}
+                            {{ tr('scope.label', 'Scope') }}: {{ current_user.tenant.slug }}
                         {% else %}
                             Authenticated
                         {% endif %}
@@ -129,7 +129,7 @@
                             {% for category, message in messages %}
                                 <div class="alert alert-{{ category }}">
                                     <strong>
-                                        {% if category == 'success' %}<i class="bi bi-check2-circle"></i> Success{% elif category == 'warning' %}<i class="bi bi-exclamation-circle"></i> Warning{% else %}<i class="bi bi-x-circle"></i> Attention{% endif %}
+                                        {% if category == 'success' %}<i class="bi bi-check2-circle"></i> {{ tr('common.success', 'Success') }}{% elif category == 'warning' %}<i class="bi bi-exclamation-circle"></i> {{ tr('common.warning', 'Warning') }}{% else %}<i class="bi bi-x-circle"></i> {{ tr('common.attention', 'Attention') }}{% endif %}
                                     </strong>
                                     <div>{{ message }}</div>
                                 </div>

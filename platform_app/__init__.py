@@ -3,6 +3,7 @@ from flask_login import current_user
 
 from .config import Settings
 from .extensions import db, login_manager, migrate
+from .services.i18n import translate
 from .services.rbac import user_has_permission
 from .services.tenant_context import resolve_tenant_from_request
 
@@ -71,10 +72,21 @@ def create_app(config_class=Settings):
 
     @app.context_processor
     def inject_permissions():
+        def _request_locale():
+            if getattr(g, "current_tenant", None) and getattr(g.current_tenant, "locale", None):
+                return g.current_tenant.locale
+            if getattr(current_user, "is_authenticated", False) and getattr(current_user, "tenant", None):
+                return current_user.tenant.locale
+            return "en"
+
         def has_permission(permission_name):
             return user_has_permission(current_user, permission_name)
 
-        return {"has_permission": has_permission}
+        def tr(key, default=None):
+            fallback = default if default is not None else key
+            return translate(key=key, default=fallback, locale=_request_locale())
+
+        return {"has_permission": has_permission, "tr": tr}
 
     @app.cli.command("init-db")
     def init_db():

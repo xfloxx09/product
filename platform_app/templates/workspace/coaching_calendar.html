@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Coaching Calendar - CoachingOS{% endblock %}
 {% block page_eyebrow %}Coaching Ops{% endblock %}
-{% block page_title %}Coaching Calendar Planner{% endblock %}
+{% block page_title %}{{ tr('calendar.title', 'Coaching Calendar Planner') }}{% endblock %}
 {% block page_actions %}
-<a class="btn btn-secondary" href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}"><i class="bi bi-journal-check"></i> Sessions</a>
+<a class="btn btn-secondary" href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}"><i class="bi bi-journal-check"></i> {{ tr('calendar.action.sessions', 'Sessions') }}</a>
 {% endblock %}
 {% block content %}
 <section class="three-up">
     <article class="card kpi-card">
-        <div class="kpi-head"><h3 class="kpi-title">Planned Sessions</h3><span class="kpi-icon"><i class="bi bi-calendar-check"></i></span></div>
+        <div class="kpi-head"><h3 class="kpi-title">{{ tr('calendar.metrics.planned_sessions', 'Planned Sessions') }}</h3><span class="kpi-icon"><i class="bi bi-calendar-check"></i></span></div>
         <p class="kpi-value kpi-count" data-count-to="{{ planned_sessions_count }}">{{ planned_sessions_count }}</p>
         <p class="kpi-meta">Scheduled coaching execution slots</p>
     </article>
     <article class="card kpi-card">
-        <div class="kpi-head"><h3 class="kpi-title">Planned Cases</h3><span class="kpi-icon"><i class="bi bi-clipboard2-check"></i></span></div>
+        <div class="kpi-head"><h3 class="kpi-title">{{ tr('calendar.metrics.planned_cases', 'Planned Cases') }}</h3><span class="kpi-icon"><i class="bi bi-clipboard2-check"></i></span></div>
         <p class="kpi-value kpi-count" data-count-to="{{ planned_cases_count }}">{{ planned_cases_count }}</p>
         <p class="kpi-meta">Case workload in planning scope</p>
     </article>
     <article class="card kpi-card">
-        <div class="kpi-head"><h3 class="kpi-title">Coach Load Signal</h3><span class="kpi-icon"><i class="bi bi-speedometer2"></i></span></div>
+        <div class="kpi-head"><h3 class="kpi-title">{{ tr('calendar.metrics.coach_load', 'Coach Load Signal') }}</h3><span class="kpi-icon"><i class="bi bi-speedometer2"></i></span></div>
         <p class="kpi-value">{{ busiest_coach[0] if busiest_coach else "-" }}</p>
-        <p class="kpi-meta">{% if busiest_coach %}{{ busiest_coach[1] }} planned sessions{% else %}No planned load yet{% endif %}</p>
+        <p class="kpi-meta">{% if busiest_coach %}{{ busiest_coach[1] }} {{ tr('calendar.metrics.planned_sessions', 'planned sessions')|lower }}{% else %}{{ tr('calendar.metrics.coach_load_empty', 'No planned load yet') }}{% endif %}</p>
     </article>
 </section>
 
@@ -28,12 +28,12 @@
     <div class="section-head">
         <div>
             <h2>{{ month_anchor.strftime("%B %Y") }}</h2>
-            <p class="muted">Click any day to start planning coaching directly from that date.</p>
+            <p class="muted">{{ tr('calendar.subtitle', 'Click any day to start planning coaching directly from that date.') }}</p>
         </div>
         <div class="inline-actions">
-            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=prev_month) }}"><i class="bi bi-chevron-left"></i> Prev</a>
-            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-dot"></i> Today</a>
-            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=next_month) }}">Next <i class="bi bi-chevron-right"></i></a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=prev_month) }}"><i class="bi bi-chevron-left"></i> {{ tr('calendar.nav.prev', 'Prev') }}</a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-dot"></i> {{ tr('calendar.nav.today', 'Today') }}</a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=next_month) }}">{{ tr('calendar.nav.next', 'Next') }} <i class="bi bi-chevron-right"></i></a>
         </div>
     </div>
 
@@ -49,7 +49,7 @@
             <article class="calendar-day{% if not day.in_month %} is-muted{% endif %}{% if day.is_today %} is-today{% endif %}">
                 <a class="calendar-day-trigger" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m'), day=day.date.isoformat()) }}">
                     <span class="calendar-day-head">{{ day.date.day }}</span>
-                    <span class="calendar-day-plan">Plan</span>
+                    <span class="calendar-day-plan">{{ tr('calendar.day.plan', 'Plan') }}</span>
                 </a>
                 {% if day.events %}
                     <ul class="calendar-events">
@@ -66,7 +66,7 @@
                         {% endif %}
                     </ul>
                 {% else %}
-                    <small class="muted">No plans</small>
+                    <small class="muted">{{ tr('calendar.day.empty', 'No plans') }}</small>
                 {% endif %}
             </article>
         {% endfor %}
@@ -81,10 +81,10 @@
         <input type="hidden" name="return_day" value="{{ selected_day.isoformat() }}">
         <div class="section-head schedule-modal-head">
             <div>
-                <h2>Plan coaching on {{ selected_day.strftime("%Y-%m-%d") }}</h2>
-                <p class="muted">Set up 1:1 or workshop coaching directly from the selected day.</p>
+                <h2>{{ tr('calendar.modal.title_prefix', 'Plan coaching on') }} {{ selected_day.strftime("%Y-%m-%d") }}</h2>
+                <p class="muted">{{ tr('calendar.modal.subtitle', 'Set up 1:1 or workshop coaching directly from the selected day.') }}</p>
             </div>
-            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}"><i class="bi bi-x-circle"></i> Close</a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}"><i class="bi bi-x-circle"></i> {{ tr('calendar.modal.close', 'Close') }}</a>
         </div>
         <div class="schedule-modal-body">
         <label>Member
@@ -157,7 +157,7 @@
         </label>
         </div>
         <div class="schedule-modal-foot">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Plan coaching session</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> {{ tr('calendar.modal.submit', 'Plan coaching session') }}</button>
         </div>
     </form>
 </section>

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Coaching Sessions - CoachingOS{% endblock %}
 {% block page_eyebrow %}Coaching Ops{% endblock %}
-{% block page_title %}Sessions and Planning{% endblock %}
+{% block page_title %}{{ tr('sessions.title', 'Sessions and Planning') }}{% endblock %}
 {% block page_actions %}
-<a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}"><i class="bi bi-arrow-left"></i> Back to ops hub</a>
-<a class="btn btn-primary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-calendar3"></i> Open calendar</a>
+<a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}"><i class="bi bi-arrow-left"></i> {{ tr('sessions.action.back_ops', 'Back to ops hub') }}</a>
+<a class="btn btn-primary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-calendar3"></i> {{ tr('sessions.action.open_calendar', 'Open calendar') }}</a>
 {% endblock %}
 {% block content %}
 {% set planned_in_view = sessions|selectattr("status", "equalto", "planned")|list|length %}
@@ -13,8 +13,8 @@
 <section class="card">
     <div class="section-head">
         <div>
-            <h2>Plan or log coaching session</h2>
-            <p class="muted">Create planned sessions for manager assignment, or mark execution as completed right away.</p>
+            <h2>{{ tr('sessions.form_title', 'Plan or log coaching session') }}</h2>
+            <p class="muted">{{ tr('sessions.form_subtitle', 'Create planned sessions for manager assignment, or mark execution as completed right away.') }}</p>
         </div>
     </div>
     <form method="post" class="stack">
@@ -110,15 +110,15 @@
     </form>
     <div class="session-quick-stats">
         <article class="session-quick-stat">
-            <small>Loaded in view</small>
+            <small>{{ tr('sessions.quick.loaded', 'Loaded in view') }}</small>
             <strong>{{ sessions|length }}</strong>
         </article>
         <article class="session-quick-stat">
-            <small>Planned / completed</small>
+            <small>{{ tr('sessions.quick.planned_completed', 'Planned / completed') }}</small>
             <strong>{{ planned_in_view }} / {{ completed_in_view }}</strong>
         </article>
         <article class="session-quick-stat">
-            <small>Workshops in view</small>
+            <small>{{ tr('sessions.quick.workshops', 'Workshops in view') }}</small>
             <strong>{{ workshops_in_view }}</strong>
         </article>
     </div>
@@ -127,8 +127,8 @@
 <section class="card">
     <div class="section-head">
         <div>
-            <h2>Recent sessions</h2>
-            <p class="muted">Execution history, action completion, and access into follow-up detail.</p>
+            <h2>{{ tr('sessions.table.title', 'Recent sessions') }}</h2>
+            <p class="muted">{{ tr('sessions.table.subtitle', 'Execution history, action completion, and access into follow-up detail.') }}</p>
         </div>
     </div>
     {% if sessions %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Session Detail - CoachingOS{% endblock %}
 {% block page_eyebrow %}Coaching Ops{% endblock %}
-{% block page_title %}Session Detail{% endblock %}
+{% block page_title %}{{ tr('session_detail.page_title', 'Session Detail') }}{% endblock %}
 {% block page_actions %}
 <a class="btn btn-secondary" href="{{ url_for('workspace.manage_sessions', tenant=tenant.slug) }}"><i class="bi bi-arrow-left"></i> Back to sessions</a>
 {% endblock %}
@@ -13,7 +13,7 @@
 
 <section class="grid">
     <article class="card">
-        <h3>Session Summary</h3>
+        <h3>{{ tr('session_detail.summary', 'Session Summary') }}</h3>
         <p>Status: <strong>{{ session.status|replace('_', ' ')|title }}</strong></p>
         <p>Type: <strong>{{ session.coaching_type|replace('_', ' ')|title }}</strong></p>
         <p>Format: <strong>{{ session.session_format|replace('_', ' ')|title }}</strong></p>
@@ -40,7 +40,7 @@
     </article>
 
     <article class="card">
-        <h3>Add Action Item</h3>
+        <h3>{{ tr('session_detail.add_action', 'Add Action Item') }}</h3>
         <form method="post" class="form-card">
             <input type="hidden" name="action" value="add_action_item">
             <label>Title</label>
@@ -53,7 +53,7 @@
 </section>
 
 <section class="card">
-    <h3>Action Plan</h3>
+    <h3>{{ tr('session_detail.action_plan', 'Action Plan') }}</h3>
     {% if action_items %}
         <table class="table-like">
             <thead>
