@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Coaching Sessions - CoachingOS{% endblock %}
 {% block page_eyebrow %}Coaching Ops{% endblock %}
-{% block page_title %}Completed Sessions{% endblock %}
+{% block page_title %}Sessions and Planning{% endblock %}
 {% block page_actions %}
 <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_ops_hub', tenant=tenant.slug) }}"><i class="bi bi-arrow-left"></i> Back to ops hub</a>
+<a class="btn btn-primary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-calendar3"></i> Open calendar</a>
 {% endblock %}
 {% block content %}
 <section class="split-grid">
     <article class="card">
         <div class="section-head">
             <div>
-                <h2>Log coaching execution</h2>
-                <p class="muted">Saving a session now automatically links it into the canonical coaching workflow.</p>
+                <h2>Plan or log coaching session</h2>
+                <p class="muted">Create planned sessions for manager assignment, or mark execution as completed right away.</p>
             </div>
         </div>
         <form method="post" class="stack">
@@ -23,20 +24,72 @@
                 </select>
             </label>
 
-            <label>Coaching type
-                <input type="text" name="coaching_type" value="quality">
-            </label>
+            <div class="three-up">
+                <label>Session status
+                    <select name="session_status">
+                        <option value="completed">Completed now</option>
+                        <option value="planned">Planned</option>
+                    </select>
+                </label>
+                <label>Primary coach
+                    <select name="coach_user_id" required>
+                        {% for coach in coaches %}
+                            <option value="{{ coach.id }}" {% if coach.id == current_user.id %}selected{% endif %}>
+                                {{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Coaching type
+                    <input type="text" name="coaching_type" value="quality">
+                </label>
+            </div>
 
-            <label>Channel
-                <select name="channel">
-                    <option value="call">Call</option>
-                    <option value="chat">Chat</option>
-                    <option value="email">Email</option>
+            <div class="three-up">
+                <label>Session format
+                    <select name="session_format">
+                        <option value="one_to_one">1:1 Coaching</option>
+                        <option value="workshop">Workshop Coaching</option>
+                    </select>
+                </label>
+                <label>Delivery mode
+                    <select name="delivery_mode">
+                        <option value="side_by_side">Side-by-side</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </label>
+                <label>Channel
+                    <select name="channel">
+                        <option value="call">Call</option>
+                        <option value="chat">Chat</option>
+                        <option value="email">Email</option>
+                        <option value="onsite">Onsite</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="three-up">
+                <label>Planned start
+                    <input type="datetime-local" name="planned_start_at">
+                </label>
+                <label>Planned end
+                    <input type="datetime-local" name="planned_end_at">
+                </label>
+                <label>Score
+                    <input type="number" name="score" min="0" max="100" step="0.1">
+                </label>
+            </div>
+
+            <label>Workshop co-coaches
+                <select name="coach_user_ids" multiple>
+                    {% for coach in coaches %}
+                        <option value="{{ coach.id }}">{{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})</option>
+                    {% endfor %}
                 </select>
             </label>
 
-            <label>Score
-                <input type="number" name="score" min="0" max="100" step="0.1">
+            <label>Assignment notes
+                <textarea name="assignment_notes" rows="3" placeholder="Manager instructions, coaching goals, and follow-up expectations"></textarea>
             </label>
 
             <label>Notes
@@ -72,18 +125,35 @@
     {% if sessions %}
         <table class="table-like">
             <thead>
-                <tr><th>Member</th><th>Coach</th><th>Type</th><th>Channel</th><th>Score</th><th>Actions</th><th></th></tr>
+                <tr><th>Member</th><th>Coach</th><th>Status</th><th>Format</th><th>Planned</th><th>Score</th><th>Actions</th><th></th></tr>
             </thead>
             <tbody>
                 {% for session in sessions %}
                     {% set action_summary = session_action_summary.get(session.id, {"total": 0, "completed": 0}) %}
                     <tr>
                         <td>{{ session.agent.full_name }}</td>
-                        <td>{{ session.coach.full_name }}</td>
-                        <td>{{ session.coaching_type }}</td>
-                        <td>{{ session.channel }}</td>
+                        <td>{{ session.coach.full_name if session.coach else "-" }}</td>
+                        <td>
+                            {% set session_status_class = "is-neutral" %}
+                            {% if session.status == "completed" %}
+                                {% set session_status_class = "is-success" %}
+                            {% elif session.status == "planned" %}
+                                {% set session_status_class = "is-warning" %}
+                            {% elif session.status == "cancelled" %}
+                                {% set session_status_class = "is-danger" %}
+                            {% endif %}
+                            <span class="status-badge {{ session_status_class }}">{{ session.status|replace('_', ' ')|title }}</span>
+                        </td>
+                        <td>
+                            {{ session.session_format|replace('_', ' ')|title }} / {{ session.delivery_mode|replace('_', ' ')|title }}
+                            <br><small>{{ session.coaching_type|replace('_', ' ')|title }} via {{ session.channel|replace('_', ' ')|title }}</small>
+                        </td>
+                        <td>{{ session.planned_start_at.strftime("%Y-%m-%d %H:%M") if session.planned_start_at else "-" }}</td>
                         <td>{{ session.score if session.score is not none else "-" }}</td>
-                        <td>{{ action_summary.completed }}/{{ action_summary.total }}</td>
+                        <td>
+                            {{ action_summary.completed }}/{{ action_summary.total }}
+                            <br><small>{{ participant_counts.get(session.id, 0) }} coach(es)</small>
+                        </td>
                         <td><a href="{{ url_for('workspace.session_detail', session_id=session.id, tenant=tenant.slug) }}">Open</a></td>
                     </tr>
                 {% endfor %}

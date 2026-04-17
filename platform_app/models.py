@@ -174,9 +174,16 @@ class CoachingSession(TimestampMixin, db.Model):
     coach_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=False, index=True)
     policy_pack_id = db.Column(db.Integer, db.ForeignKey("policy_packs.id"), nullable=True, index=True)
     coaching_type = db.Column(db.String(80), nullable=False, default="quality")
+    session_format = db.Column(db.String(30), nullable=False, default="one_to_one")
+    delivery_mode = db.Column(db.String(30), nullable=False, default="side_by_side")
     channel = db.Column(db.String(30), nullable=False, default="call")
     subject = db.Column(db.String(255), nullable=True)
     score = db.Column(db.Float, nullable=True)
+    status = db.Column(db.String(30), nullable=False, default="completed")
+    planned_start_at = db.Column(db.DateTime, nullable=True)
+    planned_end_at = db.Column(db.DateTime, nullable=True)
+    assigned_by_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=True, index=True)
+    assignment_notes = db.Column(db.Text, nullable=True)
     occurred_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     notes = db.Column(db.Text, nullable=True)
     coach_notes = db.Column(db.Text, nullable=True)
@@ -184,8 +191,30 @@ class CoachingSession(TimestampMixin, db.Model):
 
     agent = db.relationship("AgentProfile")
     coach = db.relationship("TenantUser")
+    assigned_by = db.relationship("TenantUser", foreign_keys=[assigned_by_user_id])
     coaching_case = db.relationship("CoachingCase")
     policy_pack = db.relationship("PolicyPack")
+    coach_participants = db.relationship(
+        "CoachingSessionCoach",
+        back_populates="coaching_session",
+        cascade="all, delete-orphan",
+    )
+
+
+class CoachingSessionCoach(TimestampMixin, db.Model):
+    __tablename__ = "coaching_session_coaches"
+    __table_args__ = (
+        db.UniqueConstraint("coaching_session_id", "coach_user_id", name="uq_session_coach"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), nullable=False, index=True)
+    coaching_session_id = db.Column(db.Integer, db.ForeignKey("coaching_sessions.id"), nullable=False, index=True)
+    coach_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=False, index=True)
+    role = db.Column(db.String(30), nullable=False, default="coach")
+
+    coaching_session = db.relationship("CoachingSession", back_populates="coach_participants")
+    coach = db.relationship("TenantUser")
 
 
 class CoachingActionItem(TimestampMixin, db.Model):
@@ -234,8 +263,13 @@ class CoachingCase(TimestampMixin, db.Model):
     title = db.Column(db.String(160), nullable=False)
     summary = db.Column(db.Text, nullable=True)
     source_type = db.Column(db.String(40), nullable=False, default="ad_hoc")
+    coaching_format = db.Column(db.String(30), nullable=False, default="one_to_one")
+    delivery_mode = db.Column(db.String(30), nullable=False, default="side_by_side")
     priority = db.Column(db.String(20), nullable=False, default="normal")
     status = db.Column(db.String(30), nullable=False, default="open")
+    assigned_by_user_id = db.Column(db.Integer, db.ForeignKey("tenant_users.id"), nullable=True, index=True)
+    assignment_notes = db.Column(db.Text, nullable=True)
+    planned_for = db.Column(db.DateTime, nullable=True)
     due_at = db.Column(db.DateTime, nullable=True)
     opened_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     planned_at = db.Column(db.DateTime, nullable=True)
@@ -248,6 +282,7 @@ class CoachingCase(TimestampMixin, db.Model):
     agent = db.relationship("AgentProfile")
     requester = db.relationship("TenantUser", foreign_keys=[requested_by_user_id])
     assignee = db.relationship("TenantUser", foreign_keys=[assigned_to_user_id])
+    assigned_by = db.relationship("TenantUser", foreign_keys=[assigned_by_user_id])
 
 
 class ScorecardTemplate(TimestampMixin, db.Model):

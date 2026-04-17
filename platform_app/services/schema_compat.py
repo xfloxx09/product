@@ -11,6 +11,11 @@ REQUIRED_COLUMNS = {
     },
     "coaching_cases": {
         "program_id": "INTEGER",
+        "coaching_format": "VARCHAR(30)",
+        "delivery_mode": "VARCHAR(30)",
+        "assigned_by_user_id": "INTEGER",
+        "assignment_notes": "TEXT",
+        "planned_for": "TIMESTAMP",
         "opened_at": "TIMESTAMP",
         "planned_at": "TIMESTAMP",
         "started_at": "TIMESTAMP",
@@ -18,6 +23,13 @@ REQUIRED_COLUMNS = {
     },
     "coaching_sessions": {
         "policy_pack_id": "INTEGER",
+        "session_format": "VARCHAR(30)",
+        "delivery_mode": "VARCHAR(30)",
+        "status": "VARCHAR(30)",
+        "planned_start_at": "TIMESTAMP",
+        "planned_end_at": "TIMESTAMP",
+        "assigned_by_user_id": "INTEGER",
+        "assignment_notes": "TEXT",
         "subject": "VARCHAR(255)",
         "coach_notes": "TEXT",
         "customer_journey_stage": "VARCHAR(50)",
@@ -64,6 +76,14 @@ def ensure_runtime_schema_compatibility():
                 # Conservative defaults to avoid null issues on hot paths.
                 if column_name == "priority":
                     ddl += " DEFAULT 'normal'"
+                elif column_name == "coaching_format":
+                    ddl += " DEFAULT 'one_to_one'"
+                elif column_name == "session_format":
+                    ddl += " DEFAULT 'one_to_one'"
+                elif column_name == "delivery_mode":
+                    ddl += " DEFAULT 'side_by_side'"
+                elif column_name == "status" and table_name == "coaching_sessions":
+                    ddl += " DEFAULT 'completed'"
                 elif column_name == "pii_tags_json":
                     ddl += " DEFAULT '[]'"
                 elif column_name == "rotation_version":

@@ -35,7 +35,7 @@
         {% if case_rows %}
         <table class="table-like">
             <thead>
-                <tr><th>Member</th><th>Case</th><th>Status</th><th>Priority</th><th>Owner</th><th>Target</th></tr>
+                <tr><th>Member</th><th>Case</th><th>Status</th><th>Format</th><th>Priority</th><th>Coach</th><th>Planned</th><th>Target</th></tr>
             </thead>
             <tbody>
                 {% for case in case_rows %}
@@ -59,8 +59,10 @@
                         {% endif %}
                         <span class="status-badge {{ case_status_class }}">{{ case.status|replace('_', ' ')|title }}</span>
                     </td>
+                    <td>{{ case.coaching_format|replace('_', ' ')|title }} / {{ case.delivery_mode|replace('_', ' ')|title }}</td>
                     <td>{{ case.priority|title }}</td>
                     <td>{{ case.assignee.full_name if case.assignee else "-" }}</td>
+                    <td>{{ case.planned_for.strftime("%Y-%m-%d %H:%M") if case.planned_for else "-" }}</td>
                     <td>{{ case.due_at.strftime("%Y-%m-%d") if case.due_at else "-" }}</td>
                 </tr>
                 {% endfor %}
@@ -117,6 +119,34 @@
                     <input type="date" name="due_at">
                 </label>
             </div>
+            <div class="three-up">
+                <label>Coaching format
+                    <select name="coaching_format">
+                        <option value="one_to_one">1:1 Coaching</option>
+                        <option value="workshop">Workshop Coaching</option>
+                    </select>
+                </label>
+                <label>Delivery mode
+                    <select name="delivery_mode">
+                        <option value="side_by_side">Side-by-side</option>
+                        <option value="remote">Remote</option>
+                    </select>
+                </label>
+                <label>Planned date and time
+                    <input type="datetime-local" name="planned_for">
+                </label>
+            </div>
+            <label>Assign to coach
+                <select name="assigned_to_user_id">
+                    <option value="">Assign to me</option>
+                    {% for coach in coaches %}
+                        <option value="{{ coach.id }}">{{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Assignment notes
+                <textarea name="assignment_notes" rows="3" placeholder="What should the coach focus on, and what output do you expect?"></textarea>
+            </label>
             <button class="btn btn-primary" type="submit"><i class="bi bi-plus-circle"></i> Create coaching case</button>
         </form>
     </article>

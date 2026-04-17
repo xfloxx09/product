@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -15,6 +15,7 @@ from ...models import (
     AgentProfile,
     CoachingActionItem,
     CoachingCase,
+    CoachingSessionCoach,
     CoachingSession,
     DataSource,
     Team,
@@ -59,6 +60,10 @@ def coaching_ops_hub():
                 flash("Invalid agent for coaching case.", "danger")
             elif str(exc) == "team_scope_violation":
                 flash("You can only create coaching cases for your assigned teams.", "danger")
+            elif str(exc) == "invalid_assignee":
+                flash("Assigned coach is invalid.", "danger")
+            elif str(exc) == "invalid_planned_for":
+                flash("Planned coaching time must use valid date and time.", "danger")
             else:
                 flash("Target date must use YYYY-MM-DD format.", "danger")
             return redirect(url_for("workspace.coaching_ops_hub", tenant=tenant.slug))
@@ -106,11 +111,17 @@ def coaching_ops_hub():
     sla_rows = build_agent_sla_rows(tenant_id=tenant.id, scoped_team_ids=scoped_team_ids)[:8]
     quality_rows = build_quality_risk_rows(tenant_id=tenant.id, scoped_team_ids=scoped_team_ids)[:8]
     agents = agents_q.order_by(AgentProfile.full_name.asc()).all()
+    coaches = (
+        TenantUser.query.filter_by(tenant_id=tenant.id, is_active=True)
+        .order_by(TenantUser.full_name.asc())
+        .all()
+    )
 
     return render_template(
         "workspace/coaching_ops_hub.html",
         tenant=tenant,
         agents=agents,
+        coaches=coaches,
         case_rows=case_rows,
         case_summary=case_summary,
         sessions=sessions,
@@ -403,6 +414,14 @@ def manage_sessions():
                 flash("You can only create sessions for your assigned teams.", "danger")
             elif str(exc) == "invalid_score":
                 flash("Score must be a number.", "danger")
+            elif str(exc) == "missing_planned_start":
+                flash("Planned sessions need a planned start date and time.", "danger")
+            elif str(exc) == "invalid_planned_start":
+                flash("Planned datetime must use a valid date and time value.", "danger")
+            elif str(exc) == "invalid_planned_window":
+                flash("Planned end must be after planned start.", "danger")
+            elif str(exc) == "invalid_coach":
+                flash("Selected coach participant is invalid.", "danger")
             else:
                 flash("Action due date must use YYYY-MM-DD format.", "danger")
             return redirect(url_for("workspace.manage_sessions", tenant=tenant.slug))
@@ -411,9 +430,11 @@ def manage_sessions():
             "workspace.session_created",
             {
                 "session_id": session.id,
-                "agent_id": agent.id,
+                "agent_id": session.agent_id,
                 "case_id": coaching_case.id,
                 "coaching_type": session.coaching_type,
+                "session_format": session.session_format,
+                "session_status": session.status,
                 "channel": session.channel,
                 "score": session.score,
                 "action_item_count": action_count,
@@ -433,14 +454,36 @@ def manage_sessions():
         )
     sessions = sessions_q.order_by(CoachingSession.occurred_at.desc()).limit(30).all()
     agents = agents_q.order_by(AgentProfile.full_name.asc()).all()
+    coaches = (
+        TenantUser.query.filter_by(tenant_id=tenant.id, is_active=True)
+        .order_by(TenantUser.full_name.asc())
+        .all()
+    )
     session_ids = [session.id for session in sessions]
     session_action_summary = session_action_completion_map(tenant_id=tenant.id, session_ids=session_ids)
+    participant_counts = {
+        row.coaching_session_id: row.participants
+        for row in (
+            db.session.query(
+                CoachingSessionCoach.coaching_session_id,
+                func.count(CoachingSessionCoach.id).label("participants"),
+            )
+            .filter(
+                CoachingSessionCoach.tenant_id == tenant.id,
+                CoachingSessionCoach.coaching_session_id.in_(session_ids) if session_ids else False,
+            )
+            .group_by(CoachingSessionCoach.coaching_session_id)
+            .all()
+        )
+    }
     return render_template(
         "workspace/sessions.html",
         sessions=sessions,
         agents=agents,
+        coaches=coaches,
         tenant=tenant,
         session_action_summary=session_action_summary,
+        participant_counts=participant_counts,
     )
 
 
@@ -555,7 +598,18 @@ def session_detail(session_id):
         .order_by(CoachingActionItem.created_at.desc())
         .all()
     )
-    return render_template("workspace/session_detail.html", tenant=tenant, session=session, action_items=action_items)
+    participants = (
+        CoachingSessionCoach.query.filter_by(tenant_id=tenant.id, coaching_session_id=session.id)
+        .order_by(CoachingSessionCoach.role.asc(), CoachingSessionCoach.created_at.asc())
+        .all()
+    )
+    return render_template(
+        "workspace/session_detail.html",
+        tenant=tenant,
+        session=session,
+        action_items=action_items,
+        participants=participants,
+    )
 
 
 @bp.get("/actions")
@@ -719,6 +773,161 @@ def team_dashboard(team_id):
         recent_sessions=recent_sessions,
         sla_rows=sla_rows,
         quality_rows=quality_rows,
+    )
+
+
+@bp.route("/coaching-calendar", methods=["GET", "POST"])
+@login_required
+@tenant_required
+@permission_required("workspace.manage_sessions")
+def coaching_calendar():
+    tenant = g.current_tenant or current_user.tenant
+    scoped_team_ids = get_user_team_scope_ids(current_user)
+
+    if request.method == "POST":
+        form_data = request.form.copy()
+        form_data["session_status"] = "planned"
+        try:
+            create_session_from_form(
+                tenant_id=tenant.id,
+                actor_user_id=current_user.id,
+                form_data=form_data,
+                scoped_team_ids=scoped_team_ids,
+            )
+        except ValueError as exc:
+            code = str(exc)
+            if code == "invalid_agent":
+                flash("Invalid agent for calendar planning.", "danger")
+            elif code == "team_scope_violation":
+                flash("You can only plan sessions for your assigned teams.", "danger")
+            elif code in {"missing_planned_start", "invalid_planned_start"}:
+                flash("Please provide a valid planned start date and time.", "danger")
+            elif code == "invalid_planned_window":
+                flash("Planned end must be after planned start.", "danger")
+            elif code == "invalid_coach":
+                flash("Selected coach is invalid.", "danger")
+            else:
+                flash("Could not plan session from calendar.", "danger")
+            return redirect(url_for("workspace.coaching_calendar", tenant=tenant.slug))
+        db.session.commit()
+        flash("Coaching session planned from calendar.", "success")
+        return redirect(url_for("workspace.coaching_calendar", tenant=tenant.slug))
+
+    month_raw = (request.args.get("month") or "").strip()
+    try:
+        month_anchor = datetime.strptime(month_raw, "%Y-%m").date() if month_raw else date.today().replace(day=1)
+    except ValueError:
+        month_anchor = date.today().replace(day=1)
+    month_anchor = month_anchor.replace(day=1)
+    start_day = month_anchor - timedelta(days=month_anchor.weekday())
+    end_day = start_day + timedelta(days=41)
+    range_start = datetime.combine(start_day, datetime.min.time())
+    range_end = datetime.combine(end_day + timedelta(days=1), datetime.min.time())
+
+    agents_q = AgentProfile.query.filter_by(tenant_id=tenant.id, status="active")
+    sessions_q = CoachingSession.query.filter(
+        CoachingSession.tenant_id == tenant.id,
+        CoachingSession.status == "planned",
+        CoachingSession.planned_start_at.isnot(None),
+        CoachingSession.planned_start_at >= range_start,
+        CoachingSession.planned_start_at < range_end,
+    )
+    cases_q = CoachingCase.query.filter(
+        CoachingCase.tenant_id == tenant.id,
+        CoachingCase.status.in_(["planned", "open", "in_progress"]),
+    )
+    if scoped_team_ids is not None:
+        agents_q = agents_q.filter(AgentProfile.team_id.in_(scoped_team_ids))
+        sessions_q = sessions_q.join(AgentProfile, AgentProfile.id == CoachingSession.agent_id).filter(
+            AgentProfile.team_id.in_(scoped_team_ids)
+        )
+        cases_q = cases_q.join(AgentProfile, AgentProfile.id == CoachingCase.agent_id).filter(
+            AgentProfile.team_id.in_(scoped_team_ids)
+        )
+
+    agents = agents_q.order_by(AgentProfile.full_name.asc()).all()
+    coaches = (
+        TenantUser.query.filter_by(tenant_id=tenant.id, is_active=True)
+        .order_by(TenantUser.full_name.asc())
+        .all()
+    )
+    planned_sessions = sessions_q.order_by(CoachingSession.planned_start_at.asc()).all()
+    open_cases = (
+        cases_q.filter(
+            (CoachingCase.planned_for.isnot(None)) | (CoachingCase.due_at.isnot(None))
+        )
+        .order_by(CoachingCase.planned_for.asc().nullslast(), CoachingCase.due_at.asc().nullslast())
+        .limit(120)
+        .all()
+    )
+
+    events_by_day = {}
+    coach_load = {}
+    for session in planned_sessions:
+        day_key = session.planned_start_at.date().isoformat()
+        events_by_day.setdefault(day_key, []).append(
+            {
+                "kind": "session",
+                "time": session.planned_start_at.strftime("%H:%M"),
+                "title": f"{session.agent.full_name} - {session.session_format.replace('_', ' ')}",
+                "coach": session.coach.full_name if session.coach else "-",
+                "delivery_mode": session.delivery_mode,
+                "url": url_for("workspace.session_detail", session_id=session.id, tenant=tenant.slug),
+            }
+        )
+        coach_key = session.coach.full_name if session.coach else "Unknown coach"
+        coach_load[coach_key] = coach_load.get(coach_key, 0) + 1
+
+    for coaching_case in open_cases:
+        event_dt = coaching_case.planned_for or coaching_case.due_at
+        if not event_dt:
+            continue
+        if event_dt < range_start or event_dt >= range_end:
+            continue
+        day_key = event_dt.date().isoformat()
+        events_by_day.setdefault(day_key, []).append(
+            {
+                "kind": "case",
+                "time": event_dt.strftime("%H:%M") if isinstance(event_dt, datetime) else "00:00",
+                "title": coaching_case.title,
+                "coach": coaching_case.assignee.full_name if coaching_case.assignee else "Unassigned",
+                "delivery_mode": coaching_case.delivery_mode,
+                "url": url_for("workspace.coaching_ops_hub", tenant=tenant.slug),
+            }
+        )
+
+    days = []
+    for offset in range(42):
+        day = start_day + timedelta(days=offset)
+        key = day.isoformat()
+        days.append(
+            {
+                "date": day,
+                "in_month": day.month == month_anchor.month,
+                "is_today": day == date.today(),
+                "events": sorted(events_by_day.get(key, []), key=lambda e: (e["time"], e["kind"])),
+            }
+        )
+
+    busiest_coach = None
+    if coach_load:
+        busiest_coach = sorted(coach_load.items(), key=lambda item: item[1], reverse=True)[0]
+
+    prev_month = (month_anchor - timedelta(days=1)).replace(day=1).strftime("%Y-%m")
+    next_month = (month_anchor + timedelta(days=32)).replace(day=1).strftime("%Y-%m")
+
+    return render_template(
+        "workspace/coaching_calendar.html",
+        tenant=tenant,
+        month_anchor=month_anchor,
+        prev_month=prev_month,
+        next_month=next_month,
+        days=days,
+        agents=agents,
+        coaches=coaches,
+        planned_sessions_count=len(planned_sessions),
+        planned_cases_count=len(open_cases),
+        busiest_coach=busiest_coach,
     )
 
 

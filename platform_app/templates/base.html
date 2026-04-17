@@ -41,6 +41,7 @@
                     {% endif %}
                     {% if has_permission('workspace.manage_sessions') %}
                     <a class="{{ 'is-active' if request.endpoint == 'workspace.manage_sessions' else '' }}" href="{{ url_for('workspace.manage_sessions', tenant=current_user.tenant.slug) }}"><i class="bi bi-journal-check"></i><span>Completed sessions</span></a>
+                    <a class="{{ 'is-active' if request.endpoint == 'workspace.coaching_calendar' else '' }}" href="{{ url_for('workspace.coaching_calendar', tenant=current_user.tenant.slug) }}"><i class="bi bi-calendar3"></i><span>Coaching calendar</span></a>
                     <a class="{{ 'is-active' if request.endpoint == 'workspace.action_dashboard' else '' }}" href="{{ url_for('workspace.action_dashboard', tenant=current_user.tenant.slug) }}"><i class="bi bi-list-check"></i><span>Follow-up actions</span></a>
                     {% endif %}
                 </div>

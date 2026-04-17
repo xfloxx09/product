@@ -8,16 +8,34 @@
 {% block content %}
 <section class="hero">
     <h1>Coaching Session Detail</h1>
-    <p><span class="pill"><i class="bi bi-person-badge"></i> {{ session.agent.full_name }}</span> <span class="pill"><i class="bi bi-person-workspace"></i> {{ session.coach.full_name }}</span></p>
+    <p><span class="pill"><i class="bi bi-person-badge"></i> {{ session.agent.full_name }}</span> <span class="pill"><i class="bi bi-person-workspace"></i> {{ session.coach.full_name if session.coach else "-" }}</span></p>
 </section>
 
 <section class="grid">
     <article class="card">
         <h3>Session Summary</h3>
-        <p>Type: <strong>{{ session.coaching_type }}</strong></p>
-        <p>Channel: <strong>{{ session.channel }}</strong></p>
+        <p>Status: <strong>{{ session.status|replace('_', ' ')|title }}</strong></p>
+        <p>Type: <strong>{{ session.coaching_type|replace('_', ' ')|title }}</strong></p>
+        <p>Format: <strong>{{ session.session_format|replace('_', ' ')|title }}</strong></p>
+        <p>Delivery: <strong>{{ session.delivery_mode|replace('_', ' ')|title }}</strong></p>
+        <p>Channel: <strong>{{ session.channel|replace('_', ' ')|title }}</strong></p>
+        <p>Planned window: <strong>{{ session.planned_start_at or "-" }} to {{ session.planned_end_at or "-" }}</strong></p>
         <p>Score: <strong>{{ session.score if session.score is not none else "-" }}</strong></p>
         <p>Occurred: <strong>{{ session.occurred_at }}</strong></p>
+        <p>Assigned by: <strong>{{ session.assigned_by.full_name if session.assigned_by else "-" }}</strong></p>
+        <p>Assignment notes: <strong>{{ session.assignment_notes or "-" }}</strong></p>
+        <p>Coaching participants:
+            <strong>
+                {% if participants %}
+                    {% for participant in participants %}
+                        {% if not loop.first %}, {% endif %}
+                        {{ participant.coach.full_name if participant.coach else "-" }} ({{ participant.role|replace('_', ' ') }})
+                    {% endfor %}
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </p>
         <p>Notes: <strong>{{ session.notes or "-" }}</strong></p>
     </article>
 
