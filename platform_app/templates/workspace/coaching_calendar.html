@@ -24,131 +24,138 @@
     </article>
 </section>
 
-<section class="split-grid">
-    <article class="card">
-        <div class="section-head">
-            <div>
-                <h2>Plan session from calendar</h2>
-                <p class="muted">Use this planner for 1:1 side-by-side/remote sessions and workshop coaching with multiple coaches.</p>
-            </div>
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2>{{ month_anchor.strftime("%B %Y") }}</h2>
+            <p class="muted">Click any day to start planning coaching directly from that date.</p>
         </div>
-        <form method="post" class="stack">
-            <label>Member
-                <select name="agent_id" required>
-                    <option value="">Select member</option>
-                    {% for agent in agents %}
-                        <option value="{{ agent.id }}">{{ agent.full_name }}{% if agent.team %} - {{ agent.team.name }}{% endif %}</option>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=prev_month) }}"><i class="bi bi-chevron-left"></i> Prev</a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-dot"></i> Today</a>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=next_month) }}">Next <i class="bi bi-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <div class="calendar-grid">
+        <div class="calendar-weekday">Mon</div>
+        <div class="calendar-weekday">Tue</div>
+        <div class="calendar-weekday">Wed</div>
+        <div class="calendar-weekday">Thu</div>
+        <div class="calendar-weekday">Fri</div>
+        <div class="calendar-weekday">Sat</div>
+        <div class="calendar-weekday">Sun</div>
+        {% for day in days %}
+            <article class="calendar-day{% if not day.in_month %} is-muted{% endif %}{% if day.is_today %} is-today{% endif %}">
+                <a class="calendar-day-trigger" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m'), day=day.date.isoformat()) }}">
+                    <span class="calendar-day-head">{{ day.date.day }}</span>
+                    <span class="calendar-day-plan">Plan</span>
+                </a>
+                {% if day.events %}
+                    <ul class="calendar-events">
+                        {% for event in day.events[:5] %}
+                            <li class="calendar-event">
+                                <a href="{{ event.url }}">
+                                    <strong>{{ event.time }}</strong> {{ event.title }}
+                                    <br><small>{{ event.coach }} · {{ event.delivery_mode|replace('_', ' ')|title }}</small>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {% if day.events|length > 5 %}
+                            <li><small>+{{ day.events|length - 5 }} more</small></li>
+                        {% endif %}
+                    </ul>
+                {% else %}
+                    <small class="muted">No plans</small>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% if selected_day %}
+<div class="schedule-backdrop"></div>
+<section class="schedule-modal card">
+    <div class="section-head">
+        <div>
+            <h2>Plan coaching on {{ selected_day.strftime("%Y-%m-%d") }}</h2>
+            <p class="muted">Set up 1:1 or workshop coaching directly from the selected day.</p>
+        </div>
+        <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}"><i class="bi bi-x-circle"></i> Close</a>
+    </div>
+    <form method="post" class="stack">
+        <input type="hidden" name="return_month" value="{{ month_anchor.strftime('%Y-%m') }}">
+        <input type="hidden" name="return_day" value="{{ selected_day.isoformat() }}">
+        <label>Member
+            <select name="agent_id" required>
+                <option value="">Select member</option>
+                {% for agent in agents %}
+                    <option value="{{ agent.id }}">{{ agent.full_name }}{% if agent.team %} - {{ agent.team.name }}{% endif %}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="three-up">
+            <label>Primary coach
+                <select name="coach_user_id" required>
+                    {% for coach in coaches %}
+                        <option value="{{ coach.id }}" {% if coach.id == current_user.id %}selected{% endif %}>
+                            {{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})
+                        </option>
                     {% endfor %}
                 </select>
             </label>
-            <div class="three-up">
-                <label>Primary coach
-                    <select name="coach_user_id" required>
-                        {% for coach in coaches %}
-                            <option value="{{ coach.id }}" {% if coach.id == current_user.id %}selected{% endif %}>
-                                {{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label>Format
-                    <select name="session_format">
-                        <option value="one_to_one">1:1 Coaching</option>
-                        <option value="workshop">Workshop Coaching</option>
-                    </select>
-                </label>
-                <label>Delivery mode
-                    <select name="delivery_mode">
-                        <option value="side_by_side">Side-by-side</option>
-                        <option value="remote">Remote</option>
-                    </select>
-                </label>
-            </div>
-            <div class="three-up">
-                <label>Coaching type
-                    <input type="text" name="coaching_type" value="quality">
-                </label>
-                <label>Channel
-                    <select name="channel">
-                        <option value="call">Call</option>
-                        <option value="chat">Chat</option>
-                        <option value="email">Email</option>
-                        <option value="onsite">Onsite</option>
-                    </select>
-                </label>
-                <label>Planned start
-                    <input type="datetime-local" name="planned_start_at" required>
-                </label>
-            </div>
-            <div class="three-up">
-                <label>Planned end
-                    <input type="datetime-local" name="planned_end_at">
-                </label>
-                <label>Workshop co-coaches
-                    <select name="coach_user_ids" multiple>
-                        {% for coach in coaches %}
-                            <option value="{{ coach.id }}">{{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label>Action due date
-                    <input type="date" name="action_due_at">
-                </label>
-            </div>
-            <label>Assignment notes
-                <textarea name="assignment_notes" rows="3" placeholder="Manager assignment notes, goals, and expected outcomes"></textarea>
+            <label>Format
+                <select name="session_format">
+                    <option value="one_to_one">1:1 Coaching</option>
+                    <option value="workshop">Workshop Coaching</option>
+                </select>
             </label>
-            <label>Session notes (optional)
-                <textarea name="notes" rows="3" placeholder="Optional prep notes for the coach"></textarea>
+            <label>Delivery mode
+                <select name="delivery_mode">
+                    <option value="side_by_side">Side-by-side</option>
+                    <option value="remote">Remote</option>
+                </select>
             </label>
-            <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Plan coaching session</button>
-        </form>
-    </article>
-
-    <article class="card">
-        <div class="section-head">
-            <div>
-                <h2>{{ month_anchor.strftime("%B %Y") }}</h2>
-                <p class="muted">Coaching schedule map with sessions and planned cases.</p>
-            </div>
-            <div class="inline-actions">
-                <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=prev_month) }}"><i class="bi bi-chevron-left"></i> Prev</a>
-                <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug) }}"><i class="bi bi-dot"></i> Today</a>
-                <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=next_month) }}">Next <i class="bi bi-chevron-right"></i></a>
-            </div>
         </div>
-
-        <div class="calendar-grid">
-            <div class="calendar-weekday">Mon</div>
-            <div class="calendar-weekday">Tue</div>
-            <div class="calendar-weekday">Wed</div>
-            <div class="calendar-weekday">Thu</div>
-            <div class="calendar-weekday">Fri</div>
-            <div class="calendar-weekday">Sat</div>
-            <div class="calendar-weekday">Sun</div>
-            {% for day in days %}
-                <article class="calendar-day{% if not day.in_month %} is-muted{% endif %}{% if day.is_today %} is-today{% endif %}">
-                    <div class="calendar-day-head">{{ day.date.day }}</div>
-                    {% if day.events %}
-                        <ul class="calendar-events">
-                            {% for event in day.events[:5] %}
-                                <li class="calendar-event">
-                                    <a href="{{ event.url }}">
-                                        <strong>{{ event.time }}</strong> {{ event.title }}
-                                        <br><small>{{ event.coach }} · {{ event.delivery_mode|replace('_', ' ')|title }}</small>
-                                    </a>
-                                </li>
-                            {% endfor %}
-                            {% if day.events|length > 5 %}
-                                <li><small>+{{ day.events|length - 5 }} more</small></li>
-                            {% endif %}
-                        </ul>
-                    {% else %}
-                        <small class="muted">No plans</small>
-                    {% endif %}
-                </article>
-            {% endfor %}
+        <div class="three-up">
+            <label>Coaching type
+                <input type="text" name="coaching_type" value="quality">
+            </label>
+            <label>Channel
+                <select name="channel">
+                    <option value="call">Call</option>
+                    <option value="chat">Chat</option>
+                    <option value="email">Email</option>
+                    <option value="onsite">Onsite</option>
+                </select>
+            </label>
+            <label>Planned start
+                <input type="datetime-local" name="planned_start_at" value="{{ selected_day.isoformat() }}T09:00" required>
+            </label>
         </div>
-    </article>
+        <div class="three-up">
+            <label>Planned end
+                <input type="datetime-local" name="planned_end_at" value="{{ selected_day.isoformat() }}T10:00">
+            </label>
+            <label>Workshop co-coaches
+                <select name="coach_user_ids" multiple>
+                    {% for coach in coaches %}
+                        <option value="{{ coach.id }}">{{ coach.full_name }} ({{ coach.role|replace('_', ' ')|title }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Action due date
+                <input type="date" name="action_due_at" value="{{ selected_day.isoformat() }}">
+            </label>
+        </div>
+        <label>Assignment notes
+            <textarea name="assignment_notes" rows="3" placeholder="Manager assignment notes, goals, and expected outcomes"></textarea>
+        </label>
+        <label>Session notes (optional)
+            <textarea name="notes" rows="3" placeholder="Optional prep notes for the coach"></textarea>
+        </label>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Plan coaching session</button>
+    </form>
 </section>
+{% endif %}
 {% endblock %}

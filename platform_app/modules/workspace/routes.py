@@ -787,6 +787,13 @@ def coaching_calendar():
     if request.method == "POST":
         form_data = request.form.copy()
         form_data["session_status"] = "planned"
+        return_month = (request.form.get("return_month") or "").strip()
+        return_day = (request.form.get("return_day") or "").strip()
+        redirect_kwargs = {"tenant": tenant.slug}
+        if return_month:
+            redirect_kwargs["month"] = return_month
+        if return_day:
+            redirect_kwargs["day"] = return_day
         try:
             create_session_from_form(
                 tenant_id=tenant.id,
@@ -808,10 +815,12 @@ def coaching_calendar():
                 flash("Selected coach is invalid.", "danger")
             else:
                 flash("Could not plan session from calendar.", "danger")
-            return redirect(url_for("workspace.coaching_calendar", tenant=tenant.slug))
+            return redirect(url_for("workspace.coaching_calendar", **redirect_kwargs))
         db.session.commit()
         flash("Coaching session planned from calendar.", "success")
-        return redirect(url_for("workspace.coaching_calendar", tenant=tenant.slug))
+        if "day" in redirect_kwargs:
+            redirect_kwargs.pop("day")
+        return redirect(url_for("workspace.coaching_calendar", **redirect_kwargs))
 
     month_raw = (request.args.get("month") or "").strip()
     try:
@@ -915,6 +924,15 @@ def coaching_calendar():
 
     prev_month = (month_anchor - timedelta(days=1)).replace(day=1).strftime("%Y-%m")
     next_month = (month_anchor + timedelta(days=32)).replace(day=1).strftime("%Y-%m")
+    selected_day_raw = (request.args.get("day") or "").strip()
+    selected_day = None
+    if selected_day_raw:
+        try:
+            parsed_day = datetime.strptime(selected_day_raw, "%Y-%m-%d").date()
+            if start_day <= parsed_day <= end_day:
+                selected_day = parsed_day
+        except ValueError:
+            selected_day = None
 
     return render_template(
         "workspace/coaching_calendar.html",
@@ -928,6 +946,7 @@ def coaching_calendar():
         planned_sessions_count=len(planned_sessions),
         planned_cases_count=len(open_cases),
         busiest_coach=busiest_coach,
+        selected_day=selected_day,
     )
 
 

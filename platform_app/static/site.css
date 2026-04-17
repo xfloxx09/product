@@ -1097,6 +1097,26 @@ body.theme-light .sticky-actions {
     font-size: .86rem;
 }
 
+.calendar-day-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: .18rem .22rem;
+    border: 1px solid transparent;
+}
+
+.calendar-day-trigger:hover {
+    border-color: rgba(138, 196, 255, 0.35);
+    background: rgba(94, 161, 255, 0.08);
+}
+
+.calendar-day-plan {
+    font-size: .72rem;
+    color: var(--muted);
+}
+
 .calendar-events {
     margin: 0;
     padding: 0;
@@ -1117,6 +1137,24 @@ body.theme-light .sticky-actions {
 
 .calendar-event a:hover {
     background: rgba(94, 161, 255, 0.16);
+}
+
+.schedule-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 9, 21, 0.56);
+    z-index: 1700;
+}
+
+.schedule-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(980px, 94vw);
+    max-height: 90vh;
+    overflow: auto;
+    transform: translate(-50%, -50%);
+    z-index: 1750;
 }
 
 .u-mt-12 {
@@ -1180,6 +1218,11 @@ body.theme-light .sticky-actions {
 
     .calendar-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .schedule-modal {
+        width: min(96vw, 96vw);
+        max-height: 92vh;
     }
 }
 
