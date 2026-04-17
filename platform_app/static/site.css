@@ -1144,6 +1144,7 @@ body.theme-light .sticky-actions {
     inset: 0;
     background: rgba(4, 9, 21, 0.56);
     z-index: 1700;
+    display: block;
 }
 
 .schedule-modal {
@@ -1151,10 +1152,53 @@ body.theme-light .sticky-actions {
     top: 50%;
     left: 50%;
     width: min(980px, 94vw);
-    max-height: 90vh;
-    overflow: auto;
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
     transform: translate(-50%, -50%);
     z-index: 1750;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-strong);
+    backdrop-filter: blur(8px);
+    animation: none;
+}
+
+.schedule-modal-form {
+    height: 100%;
+    gap: 0;
+}
+
+.schedule-modal-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 1rem 1.1rem;
+    margin: 0;
+    background: linear-gradient(180deg, rgba(13, 20, 41, 0.96), rgba(13, 20, 41, 0.9));
+    border-bottom: 1px solid rgba(138, 196, 255, 0.2);
+    border-radius: 16px 16px 0 0;
+}
+
+.schedule-modal-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 12rem);
+    padding: 1rem 1.1rem;
+    display: grid;
+    gap: .9rem;
+    overscroll-behavior: contain;
+}
+
+.schedule-modal-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: flex-end;
+    padding: .9rem 1.1rem 1rem;
+    background: linear-gradient(180deg, rgba(13, 20, 41, 0.86), rgba(13, 20, 41, 0.98));
+    border-top: 1px solid rgba(138, 196, 255, 0.2);
+    border-radius: 0 0 16px 16px;
 }
 
 .u-mt-12 {
@@ -1222,7 +1266,24 @@ body.theme-light .sticky-actions {
 
     .schedule-modal {
         width: min(96vw, 96vw);
-        max-height: 92vh;
+        max-height: calc(100vh - 1.2rem);
+    }
+
+    .schedule-modal-head,
+    .schedule-modal-body,
+    .schedule-modal-foot {
+        padding-left: .85rem;
+        padding-right: .85rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .schedule-modal-body {
+        max-height: calc(100vh - 10.5rem);
     }
 }
 

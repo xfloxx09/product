@@ -74,18 +74,19 @@
 </section>
 
 {% if selected_day %}
-<div class="schedule-backdrop"></div>
-<section class="schedule-modal card">
-    <div class="section-head">
-        <div>
-            <h2>Plan coaching on {{ selected_day.strftime("%Y-%m-%d") }}</h2>
-            <p class="muted">Set up 1:1 or workshop coaching directly from the selected day.</p>
-        </div>
-        <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}"><i class="bi bi-x-circle"></i> Close</a>
-    </div>
-    <form method="post" class="stack">
+<a class="schedule-backdrop" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}" aria-label="Close planning dialog"></a>
+<section class="schedule-modal" role="dialog" aria-modal="true" aria-label="Plan coaching session">
+    <form method="post" class="stack schedule-modal-form">
         <input type="hidden" name="return_month" value="{{ month_anchor.strftime('%Y-%m') }}">
         <input type="hidden" name="return_day" value="{{ selected_day.isoformat() }}">
+        <div class="section-head schedule-modal-head">
+            <div>
+                <h2>Plan coaching on {{ selected_day.strftime("%Y-%m-%d") }}</h2>
+                <p class="muted">Set up 1:1 or workshop coaching directly from the selected day.</p>
+            </div>
+            <a class="btn btn-secondary" href="{{ url_for('workspace.coaching_calendar', tenant=tenant.slug, month=month_anchor.strftime('%Y-%m')) }}"><i class="bi bi-x-circle"></i> Close</a>
+        </div>
+        <div class="schedule-modal-body">
         <label>Member
             <select name="agent_id" required>
                 <option value="">Select member</option>
@@ -154,7 +155,10 @@
         <label>Session notes (optional)
             <textarea name="notes" rows="3" placeholder="Optional prep notes for the coach"></textarea>
         </label>
-        <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Plan coaching session</button>
+        </div>
+        <div class="schedule-modal-foot">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-calendar-plus"></i> Plan coaching session</button>
+        </div>
     </form>
 </section>
 {% endif %}
